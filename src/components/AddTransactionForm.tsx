@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { X, PlusCircle, DollarSign, Calendar, FileText, Tag, StickyNote } from "lucide-react";
 import { Transaction } from "@/pages/Index";
 
@@ -70,17 +70,17 @@ export const AddTransactionForm = ({ onAdd, onClose }: AddTransactionFormProps) 
 
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-fade-in">
-      <Card className="w-full max-w-3xl bg-white/98 backdrop-blur-xl shadow-2xl border-0 animate-scale-in overflow-hidden">
+      <Card className="w-full max-w-2xl bg-white/98 backdrop-blur-xl shadow-2xl border-0 animate-scale-in overflow-hidden max-h-[90vh]">
         {/* Header com gradiente melhorado */}
-        <CardHeader className="pb-8 bg-gradient-to-br from-indigo-600 via-purple-600 to-cyan-600 text-white relative overflow-hidden">
+        <CardHeader className="pb-6 bg-gradient-to-br from-indigo-600 via-purple-600 to-cyan-600 text-white relative overflow-hidden">
           <div className="absolute inset-0 bg-white/10 backdrop-blur-sm"></div>
-          <CardTitle className="flex items-center justify-between text-2xl font-bold relative z-10">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-white/20 rounded-2xl backdrop-blur-sm shadow-lg">
-                <PlusCircle className="w-7 h-7" />
+          <CardTitle className="flex items-center justify-between text-xl font-bold relative z-10">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-white/20 rounded-xl backdrop-blur-sm shadow-lg">
+                <PlusCircle className="w-5 h-5" />
               </div>
               <div>
-                <h2 className="text-2xl font-bold">Nova Transação</h2>
+                <h2 className="text-xl font-bold">Nova Transação</h2>
                 <p className="text-white/80 text-sm font-normal mt-1">
                   Registre uma nova receita ou despesa
                 </p>
@@ -92,187 +92,182 @@ export const AddTransactionForm = ({ onAdd, onClose }: AddTransactionFormProps) 
               onClick={onClose} 
               className="text-white hover:bg-white/20 rounded-xl transition-all duration-200 p-2"
             >
-              <X className="w-5 h-5" />
+              <X className="w-4 h-4" />
             </Button>
           </CardTitle>
         </CardHeader>
 
-        <CardContent className="p-8 bg-gradient-to-br from-slate-50 to-white">
-          <form onSubmit={handleSubmit} className="space-y-8">
-            {/* Tipo de Transação com design melhorado */}
-            <div className="space-y-4">
-              <Label className="text-xl font-bold text-slate-800 flex items-center gap-2">
-                <Tag className="w-5 h-5 text-indigo-600" />
-                Tipo de Transação
-              </Label>
-              <RadioGroup
-                value={type}
-                onValueChange={(value) => {
-                  setType(value as 'income' | 'expense');
-                  setCategory('');
-                }}
-                className="grid grid-cols-2 gap-4"
-              >
-                <div className="relative">
-                  <input
-                    type="radio"
-                    id="income"
-                    value="income"
-                    checked={type === 'income'}
-                    onChange={(e) => setType(e.target.value as 'income' | 'expense')}
-                    className="peer sr-only"
-                  />
-                  <label
-                    htmlFor="income"
-                    className="flex items-center justify-center space-x-3 p-6 rounded-2xl bg-gradient-to-br from-emerald-50 to-green-100 border-2 border-emerald-200 cursor-pointer transition-all duration-300 hover:shadow-lg hover:scale-105 peer-checked:border-emerald-500 peer-checked:shadow-xl peer-checked:bg-gradient-to-br peer-checked:from-emerald-100 peer-checked:to-green-200"
-                  >
-                    <div className="text-3xl">💰</div>
-                    <div className="text-center">
-                      <div className="text-emerald-700 font-bold text-lg">Receita</div>
-                      <div className="text-emerald-600 text-sm">Dinheiro que entra</div>
-                    </div>
-                  </label>
-                </div>
-
-                <div className="relative">
-                  <input
-                    type="radio"
-                    id="expense"
-                    value="expense"
-                    checked={type === 'expense'}
-                    onChange={(e) => setType(e.target.value as 'income' | 'expense')}
-                    className="peer sr-only"
-                  />
-                  <label
-                    htmlFor="expense"
-                    className="flex items-center justify-center space-x-3 p-6 rounded-2xl bg-gradient-to-br from-red-50 to-rose-100 border-2 border-red-200 cursor-pointer transition-all duration-300 hover:shadow-lg hover:scale-105 peer-checked:border-red-500 peer-checked:shadow-xl peer-checked:bg-gradient-to-br peer-checked:from-red-100 peer-checked:to-rose-200"
-                  >
-                    <div className="text-3xl">💸</div>
-                    <div className="text-center">
-                      <div className="text-red-700 font-bold text-lg">Despesa</div>
-                      <div className="text-red-600 text-sm">Dinheiro que sai</div>
-                    </div>
-                  </label>
-                </div>
-              </RadioGroup>
-            </div>
-
-            {/* Valor e Data */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <ScrollArea className="max-h-[70vh]">
+          <CardContent className="p-6 bg-gradient-to-br from-slate-50 to-white">
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Tipo de Transação com design melhorado */}
               <div className="space-y-3">
-                <Label htmlFor="amount" className="text-lg font-bold text-slate-800 flex items-center gap-2">
-                  <DollarSign className="w-5 h-5 text-indigo-600" />
-                  Valor
+                <Label className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                  <Tag className="w-4 h-4 text-indigo-600" />
+                  Tipo de Transação
                 </Label>
-                <div className="relative">
-                  <Input
-                    id="amount"
-                    type="number"
-                    step="0.01"
-                    value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
-                    placeholder="0,00"
-                    className="h-14 text-xl font-bold rounded-2xl border-2 border-slate-200 focus:border-indigo-400 bg-white/90 backdrop-blur-sm shadow-sm pl-12 transition-all duration-200"
-                    required
-                  />
-                  <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-500 font-bold">
-                    R$
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="relative">
+                    <input
+                      type="radio"
+                      id="income"
+                      value="income"
+                      checked={type === 'income'}
+                      onChange={(e) => setType(e.target.value as 'income' | 'expense')}
+                      className="peer sr-only"
+                    />
+                    <label
+                      htmlFor="income"
+                      className="flex items-center justify-center space-x-2 p-4 rounded-xl bg-gradient-to-br from-emerald-50 to-green-100 border-2 border-emerald-200 cursor-pointer transition-all duration-300 hover:shadow-lg hover:scale-105 peer-checked:border-emerald-500 peer-checked:shadow-xl peer-checked:bg-gradient-to-br peer-checked:from-emerald-100 peer-checked:to-green-200"
+                    >
+                      <div className="text-2xl">💰</div>
+                      <div className="text-center">
+                        <div className="text-emerald-700 font-bold">Receita</div>
+                        <div className="text-emerald-600 text-xs">Dinheiro que entra</div>
+                      </div>
+                    </label>
+                  </div>
+
+                  <div className="relative">
+                    <input
+                      type="radio"
+                      id="expense"
+                      value="expense"
+                      checked={type === 'expense'}
+                      onChange={(e) => setType(e.target.value as 'income' | 'expense')}
+                      className="peer sr-only"
+                    />
+                    <label
+                      htmlFor="expense"
+                      className="flex items-center justify-center space-x-2 p-4 rounded-xl bg-gradient-to-br from-red-50 to-rose-100 border-2 border-red-200 cursor-pointer transition-all duration-300 hover:shadow-lg hover:scale-105 peer-checked:border-red-500 peer-checked:shadow-xl peer-checked:bg-gradient-to-br peer-checked:from-red-100 peer-checked:to-rose-200"
+                    >
+                      <div className="text-2xl">💸</div>
+                      <div className="text-center">
+                        <div className="text-red-700 font-bold">Despesa</div>
+                        <div className="text-red-600 text-xs">Dinheiro que sai</div>
+                      </div>
+                    </label>
                   </div>
                 </div>
               </div>
 
-              <div className="space-y-3">
-                <Label htmlFor="date" className="text-lg font-bold text-slate-800 flex items-center gap-2">
-                  <Calendar className="w-5 h-5 text-indigo-600" />
-                  Data
+              {/* Valor e Data */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="amount" className="text-base font-bold text-slate-800 flex items-center gap-2">
+                    <DollarSign className="w-4 h-4 text-indigo-600" />
+                    Valor
+                  </Label>
+                  <div className="relative">
+                    <Input
+                      id="amount"
+                      type="number"
+                      step="0.01"
+                      value={amount}
+                      onChange={(e) => setAmount(e.target.value)}
+                      placeholder="0,00"
+                      className="h-12 text-lg font-bold rounded-xl border-2 border-slate-200 focus:border-indigo-400 bg-white/90 backdrop-blur-sm shadow-sm pl-10 transition-all duration-200"
+                      required
+                    />
+                    <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-500 font-bold">
+                      R$
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="date" className="text-base font-bold text-slate-800 flex items-center gap-2">
+                    <Calendar className="w-4 h-4 text-indigo-600" />
+                    Data
+                  </Label>
+                  <Input
+                    id="date"
+                    type="date"
+                    value={date}
+                    onChange={(e) => setDate(e.target.value)}
+                    className="h-12 text-base rounded-xl border-2 border-slate-200 focus:border-indigo-400 bg-white/90 backdrop-blur-sm shadow-sm transition-all duration-200"
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* Descrição */}
+              <div className="space-y-2">
+                <Label htmlFor="description" className="text-base font-bold text-slate-800 flex items-center gap-2">
+                  <FileText className="w-4 h-4 text-indigo-600" />
+                  Descrição
                 </Label>
                 <Input
-                  id="date"
-                  type="date"
-                  value={date}
-                  onChange={(e) => setDate(e.target.value)}
-                  className="h-14 text-lg rounded-2xl border-2 border-slate-200 focus:border-indigo-400 bg-white/90 backdrop-blur-sm shadow-sm transition-all duration-200"
+                  id="description"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Ex: Almoço no restaurante, Salário mensal..."
+                  className="h-12 text-base rounded-xl border-2 border-slate-200 focus:border-indigo-400 bg-white/90 backdrop-blur-sm shadow-sm transition-all duration-200"
                   required
                 />
               </div>
-            </div>
 
-            {/* Descrição */}
-            <div className="space-y-3">
-              <Label htmlFor="description" className="text-lg font-bold text-slate-800 flex items-center gap-2">
-                <FileText className="w-5 h-5 text-indigo-600" />
-                Descrição
-              </Label>
-              <Input
-                id="description"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Ex: Almoço no restaurante, Salário mensal..."
-                className="h-14 text-lg rounded-2xl border-2 border-slate-200 focus:border-indigo-400 bg-white/90 backdrop-blur-sm shadow-sm transition-all duration-200"
-                required
-              />
-            </div>
+              {/* Categoria */}
+              <div className="space-y-2">
+                <Label htmlFor="category" className="text-base font-bold text-slate-800 flex items-center gap-2">
+                  <Tag className="w-4 h-4 text-indigo-600" />
+                  Categoria
+                </Label>
+                <Select value={category} onValueChange={setCategory} required>
+                  <SelectTrigger className="h-12 text-base rounded-xl border-2 border-slate-200 focus:border-indigo-400 bg-white/90 backdrop-blur-sm shadow-sm transition-all duration-200">
+                    <SelectValue placeholder="Selecione uma categoria" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white/98 backdrop-blur-xl shadow-2xl border-0 rounded-xl max-h-60">
+                    {categories.map((cat) => (
+                      <SelectItem 
+                        key={cat} 
+                        value={cat} 
+                        className="text-base p-3 rounded-lg hover:bg-slate-100 cursor-pointer transition-all duration-200 m-1"
+                      >
+                        {cat}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-            {/* Categoria */}
-            <div className="space-y-3">
-              <Label htmlFor="category" className="text-lg font-bold text-slate-800 flex items-center gap-2">
-                <Tag className="w-5 h-5 text-indigo-600" />
-                Categoria
-              </Label>
-              <Select value={category} onValueChange={setCategory} required>
-                <SelectTrigger className="h-14 text-lg rounded-2xl border-2 border-slate-200 focus:border-indigo-400 bg-white/90 backdrop-blur-sm shadow-sm transition-all duration-200">
-                  <SelectValue placeholder="Selecione uma categoria" />
-                </SelectTrigger>
-                <SelectContent className="bg-white/98 backdrop-blur-xl shadow-2xl border-0 rounded-2xl max-h-60">
-                  {categories.map((cat) => (
-                    <SelectItem 
-                      key={cat} 
-                      value={cat} 
-                      className="text-lg p-4 rounded-xl hover:bg-slate-100 cursor-pointer transition-all duration-200 m-1"
-                    >
-                      {cat}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+              {/* Observações */}
+              <div className="space-y-2">
+                <Label htmlFor="notes" className="text-base font-bold text-slate-800 flex items-center gap-2">
+                  <StickyNote className="w-4 h-4 text-indigo-600" />
+                  Observações <span className="text-slate-500 font-normal text-sm">(opcional)</span>
+                </Label>
+                <Textarea
+                  id="notes"
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder="Informações adicionais sobre a transação..."
+                  rows={3}
+                  className="text-base rounded-xl border-2 border-slate-200 focus:border-indigo-400 bg-white/90 backdrop-blur-sm resize-none shadow-sm transition-all duration-200"
+                />
+              </div>
 
-            {/* Observações */}
-            <div className="space-y-3">
-              <Label htmlFor="notes" className="text-lg font-bold text-slate-800 flex items-center gap-2">
-                <StickyNote className="w-5 h-5 text-indigo-600" />
-                Observações <span className="text-slate-500 font-normal text-sm">(opcional)</span>
-              </Label>
-              <Textarea
-                id="notes"
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                placeholder="Informações adicionais sobre a transação..."
-                rows={4}
-                className="text-lg rounded-2xl border-2 border-slate-200 focus:border-indigo-400 bg-white/90 backdrop-blur-sm resize-none shadow-sm transition-all duration-200"
-              />
-            </div>
-
-            {/* Botões */}
-            <div className="flex gap-4 pt-6">
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={onClose} 
-                className="flex-1 h-14 text-lg font-bold rounded-2xl border-2 border-slate-300 hover:bg-slate-100 hover:border-slate-400 transition-all duration-300 shadow-sm"
-              >
-                Cancelar
-              </Button>
-              <Button 
-                type="submit" 
-                className="flex-1 h-14 text-lg font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-cyan-600 hover:from-indigo-700 hover:via-purple-700 hover:to-cyan-700 text-white rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105"
-              >
-                <PlusCircle className="w-6 h-6 mr-3" />
-                Adicionar Transação
-              </Button>
-            </div>
-          </form>
-        </CardContent>
+              {/* Botões */}
+              <div className="flex gap-3 pt-4">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={onClose} 
+                  className="flex-1 h-12 text-base font-bold rounded-xl border-2 border-slate-300 hover:bg-slate-100 hover:border-slate-400 transition-all duration-300 shadow-sm"
+                >
+                  Cancelar
+                </Button>
+                <Button 
+                  type="submit" 
+                  className="flex-1 h-12 text-base font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-cyan-600 hover:from-indigo-700 hover:via-purple-700 hover:to-cyan-700 text-white rounded-xl shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105"
+                >
+                  <PlusCircle className="w-4 h-4 mr-2" />
+                  Adicionar Transação
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </ScrollArea>
       </Card>
     </div>
   );
