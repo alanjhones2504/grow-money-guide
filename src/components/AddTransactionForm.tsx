@@ -70,9 +70,9 @@ export const AddTransactionForm = ({ onAdd, onClose }: AddTransactionFormProps) 
 
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-fade-in">
-      <Card className="w-full max-w-2xl bg-white/98 backdrop-blur-xl shadow-2xl border-0 animate-scale-in overflow-hidden max-h-[90vh]">
-        {/* Header com gradiente melhorado */}
-        <CardHeader className="pb-6 bg-gradient-to-br from-indigo-600 via-purple-600 to-cyan-600 text-white relative overflow-hidden">
+      <Card className="w-full max-w-2xl bg-white/98 backdrop-blur-xl shadow-2xl border-0 animate-scale-in overflow-hidden max-h-[90vh] flex flex-col">
+        {/* Header */}
+        <CardHeader className="pb-6 bg-gradient-to-br from-indigo-600 via-purple-600 to-cyan-600 text-white relative overflow-hidden flex-shrink-0">
           <div className="absolute inset-0 bg-white/10 backdrop-blur-sm"></div>
           <CardTitle className="flex items-center justify-between text-xl font-bold relative z-10">
             <div className="flex items-center gap-3">
@@ -97,10 +97,11 @@ export const AddTransactionForm = ({ onAdd, onClose }: AddTransactionFormProps) 
           </CardTitle>
         </CardHeader>
 
-        <ScrollArea className="max-h-[70vh]">
+        {/* Scrollable Content */}
+        <ScrollArea className="flex-1 h-0">
           <CardContent className="p-6 bg-gradient-to-br from-slate-50 to-white">
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Tipo de Transação com design melhorado */}
+              {/* Tipo de Transação */}
               <div className="space-y-3">
                 <Label className="text-lg font-bold text-slate-800 flex items-center gap-2">
                   <Tag className="w-4 h-4 text-indigo-600" />
@@ -120,7 +121,7 @@ export const AddTransactionForm = ({ onAdd, onClose }: AddTransactionFormProps) 
                       htmlFor="income"
                       className="flex items-center justify-center space-x-2 p-4 rounded-xl bg-gradient-to-br from-emerald-50 to-green-100 border-2 border-emerald-200 cursor-pointer transition-all duration-300 hover:shadow-lg hover:scale-105 peer-checked:border-emerald-500 peer-checked:shadow-xl peer-checked:bg-gradient-to-br peer-checked:from-emerald-100 peer-checked:to-green-200"
                     >
-                      <div className="text-2xl">💰</div>
+                      <div className="text-xl">💰</div>
                       <div className="text-center">
                         <div className="text-emerald-700 font-bold">Receita</div>
                         <div className="text-emerald-600 text-xs">Dinheiro que entra</div>
@@ -141,7 +142,7 @@ export const AddTransactionForm = ({ onAdd, onClose }: AddTransactionFormProps) 
                       htmlFor="expense"
                       className="flex items-center justify-center space-x-2 p-4 rounded-xl bg-gradient-to-br from-red-50 to-rose-100 border-2 border-red-200 cursor-pointer transition-all duration-300 hover:shadow-lg hover:scale-105 peer-checked:border-red-500 peer-checked:shadow-xl peer-checked:bg-gradient-to-br peer-checked:from-red-100 peer-checked:to-rose-200"
                     >
-                      <div className="text-2xl">💸</div>
+                      <div className="text-xl">💸</div>
                       <div className="text-center">
                         <div className="text-red-700 font-bold">Despesa</div>
                         <div className="text-red-600 text-xs">Dinheiro que sai</div>
