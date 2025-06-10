@@ -28,25 +28,46 @@ export interface Transaction {
 const Index = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
   // Load transactions from Supabase on component mount
   useEffect(() => {
     const fetchTransactions = async () => {
-      const { data, error } = await supabase
-        .from('transactions')
-        .select('*')
-        .order('date', { ascending: false });
+      try {
+        console.log('Fetching transactions from Supabase...');
+        setIsLoading(true);
 
-      if (error) {
-        console.error('Error fetching transactions:', error);
+        const { data, error } = await supabase
+          .from('transactions')
+          .select('*')
+          .order('date', { ascending: false });
+
+        console.log('Supabase response:', { data, error });
+
+        if (error) {
+          console.error('Supabase error details:', error);
+          toast({
+            title: "Erro ao carregar transações",
+            description: `Erro: ${error.message}. Verifique se a tabela 'transactions' existe no Supabase.`,
+            variant: "destructive"
+          });
+          // Set empty array if there's an error
+          setTransactions([]);
+        } else {
+          console.log('Transactions loaded successfully:', data);
+          setTransactions(data || []);
+        }
+      } catch (err) {
+        console.error('Unexpected error:', err);
         toast({
-          title: "Erro ao carregar transações",
-          description: "Não foi possível carregar as transações do banco de dados.",
+          title: "Erro de conexão",
+          description: "Erro inesperado ao conectar com o banco de dados. Verifique as configurações do Supabase.",
           variant: "destructive"
         });
-      } else {
-        setTransactions(data || []);
+        setTransactions([]);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -76,84 +97,118 @@ const Index = () => {
   }, [transactions, toast]);
 
   const addTransaction = async (transaction: Omit<Transaction, 'id'>) => {
-    const { data, error } = await supabase
-      .from('transactions')
-      .insert([transaction])
-      .select();
+    try {
+      console.log('Adding transaction:', transaction);
+      
+      const { data, error } = await supabase
+        .from('transactions')
+        .insert([transaction])
+        .select();
 
-    if (error) {
-      console.error('Error adding transaction:', error);
+      if (error) {
+        console.error('Error adding transaction:', error);
+        toast({
+          title: "Erro ao adicionar transação",
+          description: `Erro: ${error.message}`,
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      if (data) {
+        console.log('Transaction added successfully:', data);
+        setTransactions(prev => [...data, ...prev]);
+      }
+
+      setShowAddForm(false);
       toast({
-        title: "Erro ao adicionar transação",
-        description: "Não foi possível registrar a transação no banco de dados.",
+        title: "Transação adicionada!",
+        description: `${transaction.type === 'income' ? 'Receita' : 'Despesa'} de R$ ${transaction.amount.toFixed(2)} registrada com sucesso.`,
+      });
+    } catch (err) {
+      console.error('Unexpected error adding transaction:', err);
+      toast({
+        title: "Erro inesperado",
+        description: "Erro inesperado ao adicionar transação.",
         variant: "destructive"
       });
-      return;
     }
-    if (data) {
-      setTransactions(prev => [...data, ...prev]); // Adiciona a nova transação (com o ID gerado pelo Supabase) ao topo
-    }
-
-    setShowAddForm(false);
-    toast({
-      title: "Transação adicionada!",
-      description: `${transaction.type === 'income' ? 'Receita' : 'Despesa'} de R$ ${transaction.amount.toFixed(2)} registrada com sucesso.`,
-    });
   };
 
   const deleteTransaction = async (id: string) => {
-    const { error } = await supabase
-      .from('transactions')
-      .delete()
-      .eq('id', id);
+    try {
+      console.log('Deleting transaction:', id);
+      
+      const { error } = await supabase
+        .from('transactions')
+        .delete()
+        .eq('id', id);
 
-    if (error) {
-      console.error('Error deleting transaction:', error);
+      if (error) {
+        console.error('Error deleting transaction:', error);
+        toast({
+          title: "Erro ao remover transação",
+          description: `Erro: ${error.message}`,
+          variant: "destructive"
+        });
+        return;
+      }
+
+      setTransactions(prev => prev.filter(t => t.id !== id));
       toast({
-        title: "Erro ao remover transação",
-        description: "Não foi possível remover a transação do banco de dados.",
+        title: "Transação removida",
+        description: "A transação foi removida com sucesso.",
+      });
+    } catch (err) {
+      console.error('Unexpected error deleting transaction:', err);
+      toast({
+        title: "Erro inesperado",
+        description: "Erro inesperado ao remover transação.",
         variant: "destructive"
       });
-      return;
     }
-
-    setTransactions(prev => prev.filter(t => t.id !== id)); // Remove do estado local após sucesso
-
-    toast({
-      title: "Transação removida",
-      description: "A transação foi removida com sucesso.",
-    });
   };
 
   const markAsReceived = async (id: string) => {
-    const { data, error } = await supabase
-      .from('transactions')
-      .update({ receivedStatus: 'received' })
-      .eq('id', id)
-      .select();
+    try {
+      console.log('Marking transaction as received:', id);
+      
+      const { data, error } = await supabase
+        .from('transactions')
+        .update({ receivedStatus: 'received' })
+        .eq('id', id)
+        .select();
 
-    if (error) {
-      console.error('Error updating transaction:', error);
+      if (error) {
+        console.error('Error updating transaction:', error);
+        toast({
+          title: "Erro ao marcar como recebido",
+          description: `Erro: ${error.message}`,
+          variant: "destructive"
+        });
+        return;
+      }
+
+      if (data) {
+        setTransactions(prev =>
+          prev.map(transaction =>
+            transaction.id === id ? data[0] : transaction
+          )
+        );
+      }
+
       toast({
-        title: "Erro ao marcar como recebido",
-        description: "Não foi possível atualizar a transação no banco de dados.",
+        title: "Receita Marcada como Recebida!",
+        description: "O valor foi registrado em suas receitas.",
+      });
+    } catch (err) {
+      console.error('Unexpected error updating transaction:', err);
+      toast({
+        title: "Erro inesperado",
+        description: "Erro inesperado ao atualizar transação.",
         variant: "destructive"
       });
-      return;
     }
-
-    if (data) {
-      setTransactions(prev =>
-        prev.map(transaction =>
-          transaction.id === id ? data[0] : transaction
-        )
-      ); // Atualiza o estado local com os dados retornados pelo Supabase
-    }
-
-    toast({
-      title: "Receita Marcada como Recebida!",
-      description: "O valor foi registrado em suas receitas.",
-    });
   };
 
   const calculateTotals = () => {
@@ -329,3 +384,5 @@ const Index = () => {
 };
 
 export default Index;
+
+</edits_to_apply>
