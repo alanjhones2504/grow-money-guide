@@ -148,7 +148,7 @@ export const AddTransactionForm = ({ onAdd, onClose }: AddTransactionFormProps) 
                       <div className="text-lg">💰</div>
                       <div className="text-center">
                         <div className="text-emerald-700 font-semibold">Receita</div>
-                        <div className="text-emerald-600 text-xs">Dinheiro que entra</div>
+                        <div className="text-emerald-600 text-xs">Ganhos</div>
                       </div>
                     </label>
                   </div>
