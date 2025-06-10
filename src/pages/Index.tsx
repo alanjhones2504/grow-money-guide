@@ -18,6 +18,10 @@ export interface Transaction {
   category: string;
   date: string;
   notes?: string;
+  paymentMethod?: 'pix' | 'card';
+  installments?: number;
+  receivedStatus?: 'received' | 'scheduled';
+  scheduledDate?: string;
 }
 
 const Index = () => {
@@ -38,6 +42,28 @@ const Index = () => {
     localStorage.setItem('financial-transactions', JSON.stringify(transactions));
   }, [transactions]);
 
+  // Check for scheduled income on app load and daily
+  useEffect(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    transactions.forEach(transaction => {
+      if (transaction.type === 'income' && transaction.receivedStatus === 'scheduled' && transaction.scheduledDate) {
+        const scheduled = new Date(transaction.scheduledDate);
+        scheduled.setHours(0, 0, 0, 0);
+
+        if (scheduled <= today) {
+          toast({
+            title: "Receita Agendada Vencida!",
+            description: `Você recebeu R$ ${transaction.amount.toFixed(2)} (${transaction.description})?`, 
+            action: <Button variant="outline" onClick={() => markAsReceived(transaction.id)}>Marcar como Recebido</Button>,
+            duration: 900000 // Long duration to allow user interaction
+          });
+        }
+      }
+    });
+  }, [transactions, toast]);
+
   const addTransaction = (transaction: Omit<Transaction, 'id'>) => {
     const newTransaction: Transaction = {
       ...transaction,
@@ -56,6 +82,18 @@ const Index = () => {
     toast({
       title: "Transação removida",
       description: "A transação foi removida com sucesso.",
+    });
+  };
+
+  const markAsReceived = (id: string) => {
+    setTransactions(prev =>
+      prev.map(transaction =>
+        transaction.id === id ? { ...transaction, receivedStatus: 'received' } : transaction
+      )
+    );
+    toast({
+      title: "Receita Marcada como Recebida!",
+      description: "O valor foi registrado em suas receitas.",
     });
   };
 
