@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -98,7 +97,7 @@ export const AddTransactionForm = ({ onAdd, onClose }: AddTransactionFormProps) 
         </CardHeader>
 
         {/* Scrollable Content */}
-        <ScrollArea className="flex-1 h-0">
+        <ScrollArea className="flex-1">
           <CardContent className="p-6 bg-gradient-to-br from-slate-50 to-white">
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Tipo de Transação */}
