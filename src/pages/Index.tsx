@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { PlusCircle, Wallet, BarChart3 } from "lucide-react";
+import { PlusCircle, Wallet, BarChart3, Loader2 } from "lucide-react";
 import { AddTransactionForm } from "@/components/AddTransactionForm";
 import { TransactionList } from "@/components/TransactionList";
 import { FinancialChart } from "@/components/FinancialChart";
@@ -40,6 +40,20 @@ const Index = () => {
     await addTransaction(transaction);
     setShowAddForm(false);
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-cyan-50 flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <Loader2 className="w-12 h-12 animate-spin text-indigo-600 mx-auto" />
+          <div>
+            <h2 className="text-2xl font-bold text-slate-800">Carregando...</h2>
+            <p className="text-slate-600">Conectando com o banco de dados</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <ScrollArea className="h-screen">
