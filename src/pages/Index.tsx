@@ -9,6 +9,7 @@ import { TransactionList } from "@/components/TransactionList";
 import { FinancialChart } from "@/components/FinancialChart";
 import { CategoryBreakdown } from "@/components/CategoryBreakdown";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/lib/supabaseClient";
 
 export interface Transaction {
   id: string;
@@ -29,18 +30,28 @@ const Index = () => {
   const [showAddForm, setShowAddForm] = useState(false);
   const { toast } = useToast();
 
-  // Load transactions from localStorage on component mount
+  // Load transactions from Supabase on component mount
   useEffect(() => {
-    const savedTransactions = localStorage.getItem('financial-transactions');
-    if (savedTransactions) {
-      setTransactions(JSON.parse(savedTransactions));
-    }
-  }, []);
+    const fetchTransactions = async () => {
+      const { data, error } = await supabase
+        .from('transactions')
+        .select('*')
+        .order('date', { ascending: false });
 
-  // Save transactions to localStorage whenever transactions change
-  useEffect(() => {
-    localStorage.setItem('financial-transactions', JSON.stringify(transactions));
-  }, [transactions]);
+      if (error) {
+        console.error('Error fetching transactions:', error);
+        toast({
+          title: "Erro ao carregar transações",
+          description: "Não foi possível carregar as transações do banco de dados.",
+          variant: "destructive"
+        });
+      } else {
+        setTransactions(data || []);
+      }
+    };
+
+    fetchTransactions();
+  }, [toast]);
 
   // Check for scheduled income on app load and daily
   useEffect(() => {
@@ -64,12 +75,25 @@ const Index = () => {
     });
   }, [transactions, toast]);
 
-  const addTransaction = (transaction: Omit<Transaction, 'id'>) => {
-    const newTransaction: Transaction = {
-      ...transaction,
-      id: Date.now().toString(),
-    };
-    setTransactions(prev => [newTransaction, ...prev]);
+  const addTransaction = async (transaction: Omit<Transaction, 'id'>) => {
+    const { data, error } = await supabase
+      .from('transactions')
+      .insert([transaction])
+      .select();
+
+    if (error) {
+      console.error('Error adding transaction:', error);
+      toast({
+        title: "Erro ao adicionar transação",
+        description: "Não foi possível registrar a transação no banco de dados.",
+        variant: "destructive"
+      });
+      return;
+    }
+    if (data) {
+      setTransactions(prev => [...data, ...prev]); // Adiciona a nova transação (com o ID gerado pelo Supabase) ao topo
+    }
+
     setShowAddForm(false);
     toast({
       title: "Transação adicionada!",
@@ -77,20 +101,55 @@ const Index = () => {
     });
   };
 
-  const deleteTransaction = (id: string) => {
-    setTransactions(prev => prev.filter(t => t.id !== id));
+  const deleteTransaction = async (id: string) => {
+    const { error } = await supabase
+      .from('transactions')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('Error deleting transaction:', error);
+      toast({
+        title: "Erro ao remover transação",
+        description: "Não foi possível remover a transação do banco de dados.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setTransactions(prev => prev.filter(t => t.id !== id)); // Remove do estado local após sucesso
+
     toast({
       title: "Transação removida",
       description: "A transação foi removida com sucesso.",
     });
   };
 
-  const markAsReceived = (id: string) => {
-    setTransactions(prev =>
-      prev.map(transaction =>
-        transaction.id === id ? { ...transaction, receivedStatus: 'received' } : transaction
-      )
-    );
+  const markAsReceived = async (id: string) => {
+    const { data, error } = await supabase
+      .from('transactions')
+      .update({ receivedStatus: 'received' })
+      .eq('id', id)
+      .select();
+
+    if (error) {
+      console.error('Error updating transaction:', error);
+      toast({
+        title: "Erro ao marcar como recebido",
+        description: "Não foi possível atualizar a transação no banco de dados.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (data) {
+      setTransactions(prev =>
+        prev.map(transaction =>
+          transaction.id === id ? data[0] : transaction
+        )
+      ); // Atualiza o estado local com os dados retornados pelo Supabase
+    }
+
     toast({
       title: "Receita Marcada como Recebida!",
       description: "O valor foi registrado em suas receitas.",
