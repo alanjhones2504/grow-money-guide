@@ -22,8 +22,15 @@ export const useScheduledIncomeAlerts = (
         if (scheduled <= today) {
           toast({
             title: "Receita Agendada Vencida!",
-            description: `Você recebeu R$ ${transaction.amount.toFixed(2)} (${transaction.description})?`, 
-            action: <Button variant="outline" onClick={() => markAsReceived(transaction.id)}>Marcar como Recebido</Button>,
+            description: `Você recebeu R$ ${transaction.amount.toFixed(2)} (${transaction.description})?`,
+            action: (
+              <Button 
+                variant="outline" 
+                onClick={() => markAsReceived(transaction.id)}
+              >
+                Marcar como Recebido
+              </Button>
+            ),
             duration: 900000 // Long duration to allow user interaction
           });
         }
