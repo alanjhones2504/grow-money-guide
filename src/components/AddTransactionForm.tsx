@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -48,46 +49,81 @@ export const AddTransactionForm = ({ onAdd, onClose }: AddTransactionFormProps) 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
+    console.log('Form submitted with:', { type, amount, description, category, paymentMethod, receivedStatus });
+    
+    // Validação mais robusta
     if (!amount || !description || !category) {
+      console.error('Missing required fields:', { amount: !!amount, description: !!description, category: !!category });
+      alert('Por favor, preencha todos os campos obrigatórios: Valor, Descrição e Categoria');
       return;
     }
 
-    const newTransaction: Omit<Transaction, 'id'> = {
-      type,
-      amount: parseFloat(amount),
-      description,
-      category,
-      date,
-      notes,
-    };
-
-    if (type === 'expense') {
-      if (paymentMethod === 'pix' || paymentMethod === 'card') {
-        newTransaction.paymentMethod = paymentMethod;
-      }
-      if (paymentMethod === 'card' && installments) {
-        newTransaction.installments = parseInt(installments);
-      }
-    } else if (type === 'income') {
-      if (receivedStatus) {
-        newTransaction.receivedStatus = receivedStatus;
-      }
-      if (receivedStatus === 'scheduled' && scheduledDate) {
-        newTransaction.date = scheduledDate;
-      }
+    const parsedAmount = parseFloat(amount);
+    if (isNaN(parsedAmount) || parsedAmount <= 0) {
+      console.error('Invalid amount:', amount);
+      alert('Por favor, insira um valor válido maior que zero');
+      return;
     }
 
-    onAdd(newTransaction);
+    try {
+      const newTransaction: Omit<Transaction, 'id'> = {
+        type,
+        amount: parsedAmount,
+        description,
+        category,
+        date,
+        notes,
+      };
 
-    // Reset form
-    setAmount('');
-    setDescription('');
-    setCategory('');
-    setNotes('');
-    setPaymentMethod('');
-    setInstallments('1');
-    setReceivedStatus('');
-    setScheduledDate(new Date().toISOString().split('T')[0]);
+      // Adicionar campos específicos para despesas
+      if (type === 'expense') {
+        if (paymentMethod) {
+          newTransaction.paymentMethod = paymentMethod;
+        }
+        if (paymentMethod === 'card' && installments) {
+          const parsedInstallments = parseInt(installments);
+          if (!isNaN(parsedInstallments) && parsedInstallments > 0) {
+            newTransaction.installments = parsedInstallments;
+          }
+        }
+      } 
+      // Adicionar campos específicos para receitas
+      else if (type === 'income') {
+        if (receivedStatus) {
+          newTransaction.receivedStatus = receivedStatus;
+        }
+        if (receivedStatus === 'scheduled' && scheduledDate) {
+          newTransaction.date = scheduledDate;
+        }
+      }
+
+      console.log('Calling onAdd with transaction:', newTransaction);
+      onAdd(newTransaction);
+
+      // Reset form
+      setAmount('');
+      setDescription('');
+      setCategory('');
+      setNotes('');
+      setPaymentMethod('');
+      setInstallments('1');
+      setReceivedStatus('');
+      setScheduledDate(new Date().toISOString().split('T')[0]);
+      
+      console.log('Form reset completed');
+    } catch (error) {
+      console.error('Error creating transaction:', error);
+      alert('Erro ao criar transação. Tente novamente.');
+    }
+  };
+
+  // Reset category when type changes
+  const handleTypeChange = (newType: 'income' | 'expense') => {
+    console.log('Type changed to:', newType);
+    setType(newType);
+    setCategory(''); // Reset category when type changes
+    setPaymentMethod(''); // Reset payment method
+    setReceivedStatus(''); // Reset received status
   };
 
   const categories = type === 'income' ? incomeCategories : expenseCategories;
@@ -138,7 +174,7 @@ export const AddTransactionForm = ({ onAdd, onClose }: AddTransactionFormProps) 
                       id="income"
                       value="income"
                       checked={type === 'income'}
-                      onChange={(e) => setType(e.target.value as 'income' | 'expense')}
+                      onChange={(e) => handleTypeChange(e.target.value as 'income' | 'expense')}
                       className="peer sr-only"
                     />
                     <label
@@ -158,7 +194,7 @@ export const AddTransactionForm = ({ onAdd, onClose }: AddTransactionFormProps) 
                       id="expense"
                       value="expense"
                       checked={type === 'expense'}
-                      onChange={(e) => setType(e.target.value as 'income' | 'expense')}
+                      onChange={(e) => handleTypeChange(e.target.value as 'income' | 'expense')}
                       className="peer sr-only"
                     />
                     <label
@@ -180,7 +216,7 @@ export const AddTransactionForm = ({ onAdd, onClose }: AddTransactionFormProps) 
                 <div className="space-y-1">
                   <Label htmlFor="amount" className="text-sm font-semibold text-slate-800 flex items-center gap-2">
                     <DollarSign className="w-4 h-4 text-indigo-600" />
-                    Valor
+                    Valor *
                   </Label>
                   <div className="relative">
                     <Input
@@ -219,7 +255,7 @@ export const AddTransactionForm = ({ onAdd, onClose }: AddTransactionFormProps) 
               <div className="space-y-1">
                 <Label htmlFor="description" className="text-sm font-semibold text-slate-800 flex items-center gap-2">
                   <FileText className="w-4 h-4 text-indigo-600" />
-                  Descrição
+                  Descrição *
                 </Label>
                 <Input
                   id="description"
@@ -235,13 +271,16 @@ export const AddTransactionForm = ({ onAdd, onClose }: AddTransactionFormProps) 
               <div className="space-y-1">
                 <Label htmlFor="category" className="text-sm font-semibold text-slate-800 flex items-center gap-2">
                   <Tag className="w-4 h-4 text-indigo-600" />
-                  Categoria
+                  Categoria *
                 </Label>
-                <Select value={category} onValueChange={setCategory} required>
+                <Select value={category} onValueChange={(value) => {
+                  console.log('Category selected:', value);
+                  setCategory(value);
+                }}>
                   <SelectTrigger className="h-9 text-base rounded-xl border-2 border-slate-200 focus:border-indigo-400 bg-white/90 backdrop-blur-sm shadow-sm transition-all duration-200">
                     <SelectValue placeholder="Selecione uma categoria" />
                   </SelectTrigger>
-                  <SelectContent className="bg-white/98 backdrop-blur-xl shadow-2xl border-0 rounded-xl max-h-60">
+                  <SelectContent className="bg-white/98 backdrop-blur-xl shadow-2xl border-0 rounded-xl max-h-60 z-[60]">
                     {categories.map((cat) => (
                       <SelectItem 
                         key={cat} 
@@ -278,11 +317,14 @@ export const AddTransactionForm = ({ onAdd, onClose }: AddTransactionFormProps) 
                     <Smartphone className="w-4 h-4 text-indigo-600" />
                     Status do Recebimento
                   </Label>
-                  <Select value={receivedStatus} onValueChange={(value) => setReceivedStatus(value as 'received' | 'scheduled' | '')}>
+                  <Select value={receivedStatus} onValueChange={(value) => {
+                    console.log('Received status selected:', value);
+                    setReceivedStatus(value as 'received' | 'scheduled' | '');
+                  }}>
                     <SelectTrigger className="h-9 text-base rounded-xl border-2 border-slate-200 focus:border-indigo-400 bg-white/90 backdrop-blur-sm shadow-sm transition-all duration-200">
                       <SelectValue placeholder="Selecione o status" />
                     </SelectTrigger>
-                    <SelectContent className="bg-white/98 backdrop-blur-xl shadow-2xl border-0 rounded-xl max-h-60">
+                    <SelectContent className="bg-white/98 backdrop-blur-xl shadow-2xl border-0 rounded-xl max-h-60 z-[60]">
                       <SelectItem value="received" className="text-sm p-2 rounded-lg hover:bg-slate-100 cursor-pointer transition-all duration-200 m-1">
                         Recebido na Hora
                       </SelectItem>
@@ -317,11 +359,14 @@ export const AddTransactionForm = ({ onAdd, onClose }: AddTransactionFormProps) 
                     <CreditCard className="w-4 h-4 text-indigo-600" />
                     Forma de Pagamento
                   </Label>
-                  <Select value={paymentMethod} onValueChange={(value) => setPaymentMethod(value as 'pix' | 'card' | '')}>
+                  <Select value={paymentMethod} onValueChange={(value) => {
+                    console.log('Payment method selected:', value);
+                    setPaymentMethod(value as 'pix' | 'card' | '');
+                  }}>
                     <SelectTrigger className="h-9 text-base rounded-xl border-2 border-slate-200 focus:border-indigo-400 bg-white/90 backdrop-blur-sm shadow-sm transition-all duration-200">
                       <SelectValue placeholder="Selecione a forma de pagamento" />
                     </SelectTrigger>
-                    <SelectContent className="bg-white/98 backdrop-blur-xl shadow-2xl border-0 rounded-xl max-h-60">
+                    <SelectContent className="bg-white/98 backdrop-blur-xl shadow-2xl border-0 rounded-xl max-h-60 z-[60]">
                       <SelectItem value="pix" className="text-sm p-2 rounded-lg hover:bg-slate-100 cursor-pointer transition-all duration-200 m-1">
                         <span className="flex items-center gap-2"><Smartphone className="w-4 h-4" /> Pix</span>
                       </SelectItem>
