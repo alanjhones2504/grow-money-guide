@@ -1,7 +1,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-import { Transaction } from "@/pages/Index";
+import { Transaction } from "@/types/Transaction";
 import { BarChart3 } from "lucide-react";
 
 interface FinancialChartProps {
