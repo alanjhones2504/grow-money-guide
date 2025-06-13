@@ -82,20 +82,12 @@ export const usePWALifecycle = () => {
     window.addEventListener('offline', handleOffline);
     window.addEventListener('appinstalled', handleAppInstalled);
 
-    // Check for updates periodically
-    const updateCheckInterval = setInterval(() => {
-      if (state.registration) {
-        state.registration.update();
-      }
-    }, 60000); // Check every minute
-
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
       window.removeEventListener('appinstalled', handleAppInstalled);
-      clearInterval(updateCheckInterval);
     };
-  }, []);
+  }, []); // Empty dependency array to run only once
 
   const updateApp = () => {
     if (state.registration?.waiting) {

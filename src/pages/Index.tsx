@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -39,13 +40,21 @@ const Index = () => {
   useEffect(() => {
     const savedTransactions = localStorage.getItem('financial-transactions');
     if (savedTransactions) {
-      setTransactions(JSON.parse(savedTransactions));
+      try {
+        setTransactions(JSON.parse(savedTransactions));
+      } catch (error) {
+        console.error('Erro ao carregar transações:', error);
+      }
     }
   }, []);
 
   // Save transactions to localStorage whenever transactions change
   useEffect(() => {
-    localStorage.setItem('financial-transactions', JSON.stringify(transactions));
+    try {
+      localStorage.setItem('financial-transactions', JSON.stringify(transactions));
+    } catch (error) {
+      console.error('Erro ao salvar transações:', error);
+    }
   }, [transactions]);
 
   // Check for scheduled income on app load and daily

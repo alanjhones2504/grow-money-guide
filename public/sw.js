@@ -15,12 +15,15 @@ self.addEventListener('install', (event) => {
     caches.open(CACHE_NAME)
       .then((cache) => {
         console.log('PWA: Cache aberto, adicionando recursos...');
-        return cache.addAll(urlsToCache);
+        return cache.addAll(urlsToCache.filter(url => url !== '/static/js/bundle.js' && url !== '/static/css/main.css'));
       })
       .then(() => {
         console.log('PWA: Recursos cacheados com sucesso');
         // Skip waiting to activate immediately
         self.skipWaiting();
+      })
+      .catch((error) => {
+        console.error('PWA: Erro ao cachear recursos:', error);
       })
   );
 });
@@ -108,18 +111,17 @@ self.addEventListener('message', (event) => {
   }
 });
 
-// Function to sync offline data (placeholder for future implementation)
+// Function to sync offline data
 async function syncOfflineData() {
   console.log('PWA: Sincronizando dados offline...');
   
   try {
-    // Get offline transactions from IndexedDB or localStorage
-    const offlineTransactions = await getOfflineTransactions();
+    // Get offline transactions from localStorage
+    const offlineTransactions = getOfflineTransactions();
     
     if (offlineTransactions.length > 0) {
       console.log(`PWA: Sincronizando ${offlineTransactions.length} transações offline`);
       // Here you would sync with your backend
-      // For now, we'll just log the sync
       console.log('PWA: Sincronização concluída');
     }
   } catch (error) {
@@ -128,10 +130,14 @@ async function syncOfflineData() {
 }
 
 // Helper function to get offline transactions
-async function getOfflineTransactions() {
-  // This would typically read from IndexedDB
-  // For now, return empty array as transactions are stored in localStorage
-  return [];
+function getOfflineTransactions() {
+  try {
+    const transactions = localStorage.getItem('financial-transactions');
+    return transactions ? JSON.parse(transactions) : [];
+  } catch (error) {
+    console.error('PWA: Erro ao acessar localStorage:', error);
+    return [];
+  }
 }
 
 // Periodic background sync registration
