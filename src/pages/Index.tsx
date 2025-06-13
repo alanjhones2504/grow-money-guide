@@ -3,14 +3,17 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { PlusCircle, TrendingUp, TrendingDown, Wallet, BarChart3, PieChart } from "lucide-react";
+import { PlusCircle, TrendingUp, TrendingDown, Wallet, BarChart3 } from "lucide-react";
 import { AddTransactionForm } from "@/components/AddTransactionForm";
 import { TransactionList } from "@/components/TransactionList";
 import { FinancialChart } from "@/components/FinancialChart";
 import { CategoryBreakdown } from "@/components/CategoryBreakdown";
 import { useToast } from "@/hooks/use-toast";
 import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
-import { usePWA } from "@/hooks/usePWA";
+import { PWAUpdatePrompt } from "@/components/PWAUpdatePrompt";
+import { PWAOfflineIndicator } from "@/components/PWAOfflineIndicator";
+import { PWAStatusIndicator } from "@/components/PWAStatusIndicator";
+import { usePWALifecycle } from "@/hooks/usePWALifecycle";
 
 export interface Transaction {
   id: string;
@@ -30,7 +33,7 @@ const Index = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [showAddForm, setShowAddForm] = useState(false);
   const { toast } = useToast();
-  const { isInstalled, isOnline } = usePWA();
+  const pwaLifecycle = usePWALifecycle();
 
   // Load transactions from localStorage on component mount
   useEffect(() => {
@@ -60,7 +63,7 @@ const Index = () => {
             title: "Receita Agendada Vencida!",
             description: `Você recebeu R$ ${transaction.amount.toFixed(2)} (${transaction.description})?`, 
             action: <Button variant="outline" onClick={() => markAsReceived(transaction.id)}>Marcar como Recebido</Button>,
-            duration: 900000 // Long duration to allow user interaction
+            duration: 900000
           });
         }
       }
@@ -122,23 +125,16 @@ const Index = () => {
     <ScrollArea className="h-screen">
       <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-cyan-50 p-4 sm:p-6 lg:p-8">
         <div className="max-w-7xl mx-auto space-y-8">
-          {/* Offline Indicator */}
-          {!isOnline && (
-            <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50">
-              <div className="bg-amber-500 text-white px-4 py-2 rounded-full text-sm font-medium shadow-lg">
-                📱 Modo Offline - Suas transações serão sincronizadas quando voltar online
-              </div>
-            </div>
-          )}
-
-          {/* PWA Status Indicator */}
-          {isInstalled && (
-            <div className="fixed top-4 right-4 z-40">
-              <div className="bg-green-500 text-white px-3 py-1 rounded-full text-xs font-medium shadow-lg">
-                📱 App Instalado
-              </div>
-            </div>
-          )}
+          {/* PWA Status Indicators */}
+          <PWAOfflineIndicator isOnline={pwaLifecycle.isOnline} />
+          <PWAUpdatePrompt 
+            updateAvailable={pwaLifecycle.updateAvailable} 
+            onUpdate={pwaLifecycle.updateApp} 
+          />
+          <PWAStatusIndicator 
+            isInstalled={pwaLifecycle.isInstalled} 
+            installing={pwaLifecycle.installing} 
+          />
 
           {/* Header */}
           <div className="text-center space-y-4 animate-fade-in">
