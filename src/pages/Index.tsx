@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -10,6 +9,7 @@ import { SummaryCards } from "@/components/SummaryCards";
 import { PWAIndicators } from "@/components/PWAIndicators";
 import { AppHeader } from "@/components/AppHeader";
 import { MainContent } from "@/components/MainContent";
+import { Transaction } from "@/types/Transaction";
 
 const Index = () => {
   const [showAddForm, setShowAddForm] = useState(false);
@@ -18,7 +18,7 @@ const Index = () => {
 
   const totals = calculateTotals();
 
-  const handleAddTransaction = (transaction: any) => {
+  const handleAddTransaction = (transaction: Omit<Transaction, 'id'>) => {
     addTransaction(transaction);
     setShowAddForm(false);
   };

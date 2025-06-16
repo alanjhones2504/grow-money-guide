@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Transaction } from "@/types/Transaction";
@@ -42,8 +41,7 @@ export const useTransactions = () => {
         if (scheduled <= today) {
           toast({
             title: "Receita Agendada Vencida!",
-            description: `Você recebeu R$ ${transaction.amount.toFixed(2)} (${transaction.description})?`, 
-            action: <Button variant="outline" onClick={() => markAsReceived(transaction.id)}>Marcar como Recebido</Button>,
+            description: `Você recebeu R$ ${transaction.amount.toFixed(2)} (${transaction.description})?`,
             duration: 900000
           });
         }

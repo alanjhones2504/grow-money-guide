@@ -1,4 +1,3 @@
-
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BarChart3 } from "lucide-react";
 import { TransactionList } from "@/components/TransactionList";
@@ -10,6 +9,13 @@ interface MainContentProps {
   transactions: Transaction[];
   onDelete: (id: string) => void;
 }
+
+const AnalyticsSection = ({ transactions }: { transactions: Transaction[] }) => (
+  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+    <FinancialChart transactions={transactions} />
+    <CategoryBreakdown transactions={transactions} />
+  </div>
+);
 
 export const MainContent = ({ transactions, onDelete }: MainContentProps) => {
   return (
@@ -31,10 +37,7 @@ export const MainContent = ({ transactions, onDelete }: MainContentProps) => {
         </div>
 
         <TabsContent value="overview" className="space-y-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <FinancialChart transactions={transactions} />
-            <CategoryBreakdown transactions={transactions} />
-          </div>
+          <AnalyticsSection transactions={transactions} />
           <TransactionList 
             transactions={transactions.slice(0, 5)} 
             onDelete={onDelete}
@@ -51,10 +54,7 @@ export const MainContent = ({ transactions, onDelete }: MainContentProps) => {
         </TabsContent>
 
         <TabsContent value="analytics" className="space-y-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <FinancialChart transactions={transactions} />
-            <CategoryBreakdown transactions={transactions} />
-          </div>
+          <AnalyticsSection transactions={transactions} />
         </TabsContent>
       </Tabs>
     </div>
