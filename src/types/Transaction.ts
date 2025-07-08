@@ -11,4 +11,5 @@ export interface Transaction {
   installments?: number;
   receivedStatus?: 'received' | 'scheduled';
   scheduledDate?: string;
+  cardId?: string;
 }

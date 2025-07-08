@@ -81,6 +81,14 @@ export const useTransactions = () => {
     });
   };
 
+  const updateTransaction = (id: string, updated: Partial<Transaction>) => {
+    setTransactions(prev => prev.map(t => t.id === id ? { ...t, ...updated } : t));
+    toast({
+      title: "Transação atualizada!",
+      description: "A transação foi alterada com sucesso.",
+    });
+  };
+
   const calculateTotals = () => {
     const totalIncome = transactions
       .filter(t => t.type === 'income')
@@ -102,6 +110,7 @@ export const useTransactions = () => {
     addTransaction,
     deleteTransaction,
     markAsReceived,
-    calculateTotals
+    calculateTotals,
+    updateTransaction
   };
 };

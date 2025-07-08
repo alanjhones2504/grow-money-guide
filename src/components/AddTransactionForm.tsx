@@ -9,9 +9,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { X, PlusCircle, DollarSign, Calendar, FileText, Tag, StickyNote, CreditCard, Smartphone } from "lucide-react";
 import { Transaction } from "@/pages/Index";
 
+interface Card {
+  id: number;
+  nome: string;
+  banco: string;
+  limite: string;
+  fechamento: string;
+}
+
 interface AddTransactionFormProps {
   onAdd: (transaction: Omit<Transaction, 'id'>) => void;
   onClose: () => void;
+  cards: Card[];
 }
 
 const incomeCategories = [
@@ -34,7 +43,7 @@ const expenseCategories = [
   "Outros"
 ];
 
-export const AddTransactionForm = ({ onAdd, onClose }: AddTransactionFormProps) => {
+export const AddTransactionForm = ({ onAdd, onClose, cards }: AddTransactionFormProps) => {
   const [type, setType] = useState<'income' | 'expense'>('expense');
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
@@ -45,6 +54,7 @@ export const AddTransactionForm = ({ onAdd, onClose }: AddTransactionFormProps) 
   const [installments, setInstallments] = useState<string>('1');
   const [receivedStatus, setReceivedStatus] = useState<'received' | 'scheduled' | ''>('');
   const [scheduledDate, setScheduledDate] = useState(new Date().toISOString().split('T')[0]);
+  const [selectedCardId, setSelectedCardId] = useState<string>("");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -86,6 +96,9 @@ export const AddTransactionForm = ({ onAdd, onClose }: AddTransactionFormProps) 
             newTransaction.installments = parsedInstallments;
           }
         }
+        if (paymentMethod === 'card' && selectedCardId) {
+          newTransaction.cardId = selectedCardId;
+        }
       } 
       // Adicionar campos específicos para receitas
       else if (type === 'income') {
@@ -109,6 +122,7 @@ export const AddTransactionForm = ({ onAdd, onClose }: AddTransactionFormProps) 
       setInstallments('1');
       setReceivedStatus('');
       setScheduledDate(new Date().toISOString().split('T')[0]);
+      setSelectedCardId(""); // Reset selected card
       
       console.log('Form reset completed');
     } catch (error) {
@@ -124,6 +138,7 @@ export const AddTransactionForm = ({ onAdd, onClose }: AddTransactionFormProps) 
     setCategory(''); // Reset category when type changes
     setPaymentMethod(''); // Reset payment method
     setReceivedStatus(''); // Reset received status
+    setSelectedCardId(""); // Reset selected card
   };
 
   const categories = type === 'income' ? incomeCategories : expenseCategories;
@@ -357,41 +372,65 @@ export const AddTransactionForm = ({ onAdd, onClose }: AddTransactionFormProps) 
                 <div className="space-y-1">
                   <Label className="text-sm font-semibold text-slate-800 flex items-center gap-2">
                     <CreditCard className="w-4 h-4 text-indigo-600" />
-                    Forma de Pagamento
+                    Método de Pagamento
                   </Label>
-                  <Select value={paymentMethod} onValueChange={(value) => {
-                    console.log('Payment method selected:', value);
-                    setPaymentMethod(value as 'pix' | 'card' | '');
-                  }}>
-                    <SelectTrigger className="h-9 text-base rounded-xl border-2 border-slate-200 focus:border-indigo-400 bg-white/90 backdrop-blur-sm shadow-sm transition-all duration-200">
-                      <SelectValue placeholder="Selecione a forma de pagamento" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-white/98 backdrop-blur-xl shadow-2xl border-0 rounded-xl max-h-60 z-[60]">
-                      <SelectItem value="pix" className="text-sm p-2 rounded-lg hover:bg-slate-100 cursor-pointer transition-all duration-200 m-1">
-                        <span className="flex items-center gap-2"><Smartphone className="w-4 h-4" /> Pix</span>
-                      </SelectItem>
-                      <SelectItem value="card" className="text-sm p-2 rounded-lg hover:bg-slate-100 cursor-pointer transition-all duration-200 m-1">
-                        <span className="flex items-center gap-2"><CreditCard className="w-4 h-4" /> Cartão</span>
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                  {paymentMethod === 'card' && (
-                    <div className="space-y-1 mt-3">
-                      <Label htmlFor="installments" className="text-sm font-semibold text-slate-800 flex items-center gap-2">
-                        <DollarSign className="w-4 h-4 text-indigo-600" />
-                        Parcelas
-                      </Label>
-                      <Input
-                        id="installments"
-                        type="number"
-                        min="1"
-                        value={installments}
-                        onChange={(e) => setInstallments(e.target.value)}
-                        placeholder="1"
-                        className="h-9 text-base rounded-xl border-2 border-slate-200 focus:border-indigo-400 bg-white/90 backdrop-blur-sm shadow-sm transition-all duration-200"
-                      />
-                    </div>
-                  )}
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      className={`p-2 rounded-xl border-2 transition-all duration-200 ${paymentMethod === 'pix' ? 'border-emerald-500 bg-emerald-50' : 'border-slate-200 bg-white'}`}
+                      onClick={() => setPaymentMethod('pix')}
+                    >
+                      PIX
+                    </button>
+                    <button
+                      type="button"
+                      className={`p-2 rounded-xl border-2 transition-all duration-200 ${paymentMethod === 'card' ? 'border-indigo-500 bg-indigo-50' : 'border-slate-200 bg-white'}`}
+                      onClick={() => setPaymentMethod('card')}
+                    >
+                      Cartão
+                    </button>
+                  </div>
+                </div>
+              )}
+              {/* Seleção de Cartão */}
+              {type === 'expense' && paymentMethod === 'card' && (
+                <div className="space-y-1">
+                  <Label className="text-sm font-semibold text-slate-800 flex items-center gap-2">
+                    <CreditCard className="w-4 h-4 text-indigo-600" />
+                    Selecione o Cartão
+                  </Label>
+                  <select
+                    className="w-full border rounded px-3 py-2"
+                    value={selectedCardId}
+                    onChange={e => setSelectedCardId(e.target.value)}
+                    required
+                  >
+                    <option value="">Selecione...</option>
+                    {cards.map(card => (
+                      <option key={card.id} value={card.id}>
+                        {card.nome} - {card.banco}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {/* Parcelas (apenas para despesas) */}
+              {type === 'expense' && paymentMethod === 'card' && (
+                <div className="space-y-1">
+                  <Label htmlFor="installments" className="text-sm font-semibold text-slate-800 flex items-center gap-2">
+                    <DollarSign className="w-4 h-4 text-indigo-600" />
+                    Parcelas
+                  </Label>
+                  <Input
+                    id="installments"
+                    type="number"
+                    min="1"
+                    value={installments}
+                    onChange={(e) => setInstallments(e.target.value)}
+                    placeholder="1"
+                    className="h-9 text-base rounded-xl border-2 border-slate-200 focus:border-indigo-400 bg-white/90 backdrop-blur-sm shadow-sm transition-all duration-200"
+                  />
                 </div>
               )}
 
