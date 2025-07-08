@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { X, PlusCircle, DollarSign, Calendar, FileText, Tag, StickyNote, CreditCard, Smartphone } from "lucide-react";
-import { Transaction } from "@/pages/Index";
+import { Transaction } from "@/types/Transaction"; // CORRETO!
 
 interface Card {
   id: number;
@@ -58,19 +57,15 @@ export const AddTransactionForm = ({ onAdd, onClose, cards }: AddTransactionForm
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    console.log('Form submitted with:', { type, amount, description, category, paymentMethod, receivedStatus });
-    
-    // Validação mais robusta
+
+    // Validação
     if (!amount || !description || !category) {
-      console.error('Missing required fields:', { amount: !!amount, description: !!description, category: !!category });
       alert('Por favor, preencha todos os campos obrigatórios: Valor, Descrição e Categoria');
       return;
     }
 
     const parsedAmount = parseFloat(amount);
     if (isNaN(parsedAmount) || parsedAmount <= 0) {
-      console.error('Invalid amount:', amount);
       alert('Por favor, insira um valor válido maior que zero');
       return;
     }
@@ -110,7 +105,6 @@ export const AddTransactionForm = ({ onAdd, onClose, cards }: AddTransactionForm
         }
       }
 
-      console.log('Calling onAdd with transaction:', newTransaction);
       onAdd(newTransaction);
 
       // Reset form
@@ -122,23 +116,19 @@ export const AddTransactionForm = ({ onAdd, onClose, cards }: AddTransactionForm
       setInstallments('1');
       setReceivedStatus('');
       setScheduledDate(new Date().toISOString().split('T')[0]);
-      setSelectedCardId(""); // Reset selected card
-      
-      console.log('Form reset completed');
+      setSelectedCardId("");
     } catch (error) {
-      console.error('Error creating transaction:', error);
       alert('Erro ao criar transação. Tente novamente.');
     }
   };
 
   // Reset category when type changes
   const handleTypeChange = (newType: 'income' | 'expense') => {
-    console.log('Type changed to:', newType);
     setType(newType);
-    setCategory(''); // Reset category when type changes
-    setPaymentMethod(''); // Reset payment method
-    setReceivedStatus(''); // Reset received status
-    setSelectedCardId(""); // Reset selected card
+    setCategory('');
+    setPaymentMethod('');
+    setReceivedStatus('');
+    setSelectedCardId("");
   };
 
   const categories = type === 'income' ? incomeCategories : expenseCategories;
@@ -288,10 +278,7 @@ export const AddTransactionForm = ({ onAdd, onClose, cards }: AddTransactionForm
                   <Tag className="w-4 h-4 text-indigo-600" />
                   Categoria *
                 </Label>
-                <Select value={category} onValueChange={(value) => {
-                  console.log('Category selected:', value);
-                  setCategory(value);
-                }}>
+                <Select value={category} onValueChange={(value) => setCategory(value)}>
                   <SelectTrigger className="h-9 text-base rounded-xl border-2 border-slate-200 focus:border-indigo-400 bg-white/90 backdrop-blur-sm shadow-sm transition-all duration-200">
                     <SelectValue placeholder="Selecione uma categoria" />
                   </SelectTrigger>
@@ -332,10 +319,7 @@ export const AddTransactionForm = ({ onAdd, onClose, cards }: AddTransactionForm
                     <Smartphone className="w-4 h-4 text-indigo-600" />
                     Status do Recebimento
                   </Label>
-                  <Select value={receivedStatus} onValueChange={(value) => {
-                    console.log('Received status selected:', value);
-                    setReceivedStatus(value as 'received' | 'scheduled' | '');
-                  }}>
+                  <Select value={receivedStatus} onValueChange={(value) => setReceivedStatus(value as 'received' | 'scheduled' | '')}>
                     <SelectTrigger className="h-9 text-base rounded-xl border-2 border-slate-200 focus:border-indigo-400 bg-white/90 backdrop-blur-sm shadow-sm transition-all duration-200">
                       <SelectValue placeholder="Selecione o status" />
                     </SelectTrigger>
