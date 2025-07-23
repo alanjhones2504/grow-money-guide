@@ -5,8 +5,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { X, PlusCircle, DollarSign, Calendar, FileText, Tag, StickyNote, CreditCard, Smartphone } from "lucide-react";
-import { Transaction } from "@/types/Transaction"; // CORRETO!
+import { X, PlusCircle, DollarSign, Calendar, FileText, Tag, StickyNote, CreditCard, Smartphone, AlertCircle } from "lucide-react";
+import { Transaction } from "@/types/Transaction";
+import { transactionSchema } from "@/schemas/transaction.schema";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
 
 interface Card {
   id: number;
@@ -44,92 +47,89 @@ const expenseCategories = [
 
 export const AddTransactionForm = ({ onAdd, onClose, cards }: AddTransactionFormProps) => {
   const [type, setType] = useState<'income' | 'expense'>('expense');
-  const [amount, setAmount] = useState('');
-  const [description, setDescription] = useState('');
-  const [category, setCategory] = useState('');
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
-  const [notes, setNotes] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState<'pix' | 'card' | ''>('');
-  const [installments, setInstallments] = useState<string>('1');
-  const [receivedStatus, setReceivedStatus] = useState<'received' | 'scheduled' | ''>('');
-  const [scheduledDate, setScheduledDate] = useState(new Date().toISOString().split('T')[0]);
-  const [selectedCardId, setSelectedCardId] = useState<string>("");
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    // Validação
-    if (!amount || !description || !category) {
-      alert('Por favor, preencha todos os campos obrigatórios: Valor, Descrição e Categoria');
-      return;
+  const today = new Date().toISOString().split('T')[0];
+  
+  const { 
+    register, 
+    handleSubmit, 
+    formState: { errors }, 
+    setValue,
+    watch,
+    reset
+  } = useForm({
+    resolver: zodResolver(transactionSchema),
+    defaultValues: {
+      type: 'expense',
+      amount: undefined,
+      description: '',
+      category: '',
+      date: today,
+      notes: '',
+      paymentMethod: undefined,
+      installments: 1,
+      receivedStatus: undefined,
+      scheduledDate: today,
+      cardId: ''
     }
+  });
 
-    const parsedAmount = parseFloat(amount);
-    if (isNaN(parsedAmount) || parsedAmount <= 0) {
-      alert('Por favor, insira um valor válido maior que zero');
-      return;
-    }
+  // Watch values for conditional rendering
+  const watchPaymentMethod = watch('paymentMethod');
+  const watchReceivedStatus = watch('receivedStatus');
 
+  // Handle type change
+  const handleTypeChange = (newType: 'income' | 'expense') => {
+    setType(newType);
+    setValue('type', newType);
+    setValue('category', '');
+    setValue('paymentMethod', undefined);
+    setValue('receivedStatus', undefined);
+    setValue('cardId', '');
+  };
+
+  const onSubmit = (data: any) => {
     try {
+      // Prepare transaction data
       const newTransaction: Omit<Transaction, 'id'> = {
-        type,
-        amount: parsedAmount,
-        description,
-        category,
-        date,
-        notes,
+        type: data.type,
+        amount: Number(data.amount),
+        description: data.description,
+        category: data.category,
+        date: data.date,
+        notes: data.notes || undefined,
       };
 
-      // Adicionar campos específicos para despesas
-      if (type === 'expense') {
-        if (paymentMethod) {
-          newTransaction.paymentMethod = paymentMethod;
+      // Add expense-specific fields
+      if (data.type === 'expense') {
+        if (data.paymentMethod) {
+          newTransaction.paymentMethod = data.paymentMethod;
         }
-        if (paymentMethod === 'card' && installments) {
-          const parsedInstallments = parseInt(installments);
-          if (!isNaN(parsedInstallments) && parsedInstallments > 0) {
-            newTransaction.installments = parsedInstallments;
-          }
+        if (data.paymentMethod === 'card' && data.installments) {
+          newTransaction.installments = Number(data.installments);
         }
-        if (paymentMethod === 'card' && selectedCardId) {
-          newTransaction.cardId = selectedCardId;
+        if (data.paymentMethod === 'card' && data.cardId) {
+          newTransaction.cardId = data.cardId;
         }
       } 
-      // Adicionar campos específicos para receitas
-      else if (type === 'income') {
-        if (receivedStatus) {
-          newTransaction.receivedStatus = receivedStatus;
+      // Add income-specific fields
+      else if (data.type === 'income') {
+        if (data.receivedStatus) {
+          newTransaction.receivedStatus = data.receivedStatus;
         }
-        if (receivedStatus === 'scheduled' && scheduledDate) {
-          newTransaction.date = scheduledDate;
+        if (data.receivedStatus === 'scheduled' && data.scheduledDate) {
+          newTransaction.scheduledDate = data.scheduledDate;
         }
       }
 
       onAdd(newTransaction);
-
-      // Reset form
-      setAmount('');
-      setDescription('');
-      setCategory('');
-      setNotes('');
-      setPaymentMethod('');
-      setInstallments('1');
-      setReceivedStatus('');
-      setScheduledDate(new Date().toISOString().split('T')[0]);
-      setSelectedCardId("");
+      reset();
+      
     } catch (error) {
-      alert('Erro ao criar transação. Tente novamente.');
+      console.error('Erro ao criar transação:', error);
     }
   };
 
-  // Reset category when type changes
-  const handleTypeChange = (newType: 'income' | 'expense') => {
-    setType(newType);
-    setCategory('');
-    setPaymentMethod('');
-    setReceivedStatus('');
-    setSelectedCardId("");
-  };
+  // A função handleTypeChange já foi definida acima
 
   const categories = type === 'income' ? incomeCategories : expenseCategories;
 
@@ -165,7 +165,7 @@ export const AddTransactionForm = ({ onAdd, onClose, cards }: AddTransactionForm
         {/* Scrollable Content */}
         <div className="flex-1 min-h-0 overflow-auto">
           <CardContent className="p-2 bg-gradient-to-br from-slate-50 to-white">
-            <form onSubmit={handleSubmit} className="space-y-3">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
               {/* Tipo de Transação */}
               <div className="space-y-1">
                 <Label className="text-base font-semibold text-slate-800 flex items-center gap-2">
@@ -179,8 +179,9 @@ export const AddTransactionForm = ({ onAdd, onClose, cards }: AddTransactionForm
                       id="income"
                       value="income"
                       checked={type === 'income'}
-                      onChange={(e) => handleTypeChange(e.target.value as 'income' | 'expense')}
+                      onChange={() => handleTypeChange('income')}
                       className="peer sr-only"
+                      {...register('type')}
                     />
                     <label
                       htmlFor="income"
@@ -199,8 +200,9 @@ export const AddTransactionForm = ({ onAdd, onClose, cards }: AddTransactionForm
                       id="expense"
                       value="expense"
                       checked={type === 'expense'}
-                      onChange={(e) => handleTypeChange(e.target.value as 'income' | 'expense')}
+                      onChange={() => handleTypeChange('expense')}
                       className="peer sr-only"
+                      {...register('type')}
                     />
                     <label
                       htmlFor="expense"
@@ -228,16 +230,24 @@ export const AddTransactionForm = ({ onAdd, onClose, cards }: AddTransactionForm
                       id="amount"
                       type="number"
                       step="0.01"
-                      value={amount}
-                      onChange={(e) => setAmount(e.target.value)}
                       placeholder="0,00"
-                      className="h-9 text-base font-semibold rounded-xl border-2 border-slate-200 focus:border-indigo-400 bg-white/90 backdrop-blur-sm shadow-sm pl-8 transition-all duration-200"
-                      required
+                      aria-label="Valor da transação"
+                      aria-required="true"
+                      aria-invalid={errors.amount ? "true" : "false"}
+                      aria-describedby={errors.amount ? "amount-error" : undefined}
+                      className={`h-9 text-base font-semibold rounded-xl border-2 focus:border-indigo-400 bg-white/90 backdrop-blur-sm shadow-sm pl-8 transition-all duration-200 ${errors.amount ? 'border-red-500' : 'border-slate-200'}`}
+                      {...register('amount', { valueAsNumber: true })}
                     />
                     <div className="absolute left-2 top-1/2 transform -translate-y-1/2 text-slate-500 font-bold">
                       R$
                     </div>
                   </div>
+                  {errors.amount && (
+                    <p id="amount-error" className="text-red-500 text-xs flex items-center mt-1" role="alert">
+                      <AlertCircle className="w-3 h-3 mr-1" />
+                      {errors.amount.message}
+                    </p>
+                  )}
                 </div>
 
                 <div className="space-y-1">
@@ -248,11 +258,19 @@ export const AddTransactionForm = ({ onAdd, onClose, cards }: AddTransactionForm
                   <Input
                     id="date"
                     type="date"
-                    value={date}
-                    onChange={(e) => setDate(e.target.value)}
-                    className="h-9 text-base rounded-xl border-2 border-slate-200 focus:border-indigo-400 bg-white/90 backdrop-blur-sm shadow-sm transition-all duration-200"
-                    required
+                    aria-label="Data da transação"
+                    aria-required="true"
+                    aria-invalid={errors.date ? "true" : "false"}
+                    aria-describedby={errors.date ? "date-error" : undefined}
+                    className={`h-9 text-base rounded-xl border-2 focus:border-indigo-400 bg-white/90 backdrop-blur-sm shadow-sm transition-all duration-200 ${errors.date ? 'border-red-500' : 'border-slate-200'}`}
+                    {...register('date')}
                   />
+                  {errors.date && (
+                    <p id="date-error" className="text-red-500 text-xs flex items-center mt-1" role="alert">
+                      <AlertCircle className="w-3 h-3 mr-1" />
+                      {errors.date.message}
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -264,12 +282,20 @@ export const AddTransactionForm = ({ onAdd, onClose, cards }: AddTransactionForm
                 </Label>
                 <Input
                   id="description"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
                   placeholder="Ex: Almoço no restaurante, Salário mensal..."
-                  className="h-9 text-base rounded-xl border-2 border-slate-200 focus:border-indigo-400 bg-white/90 backdrop-blur-sm shadow-sm transition-all duration-200"
-                  required
+                  aria-label="Descrição da transação"
+                  aria-required="true"
+                  aria-invalid={errors.description ? "true" : "false"}
+                  aria-describedby={errors.description ? "description-error" : undefined}
+                  className={`h-9 text-base rounded-xl border-2 focus:border-indigo-400 bg-white/90 backdrop-blur-sm shadow-sm transition-all duration-200 ${errors.description ? 'border-red-500' : 'border-slate-200'}`}
+                  {...register('description')}
                 />
+                {errors.description && (
+                  <p id="description-error" className="text-red-500 text-xs flex items-center mt-1" role="alert">
+                    <AlertCircle className="w-3 h-3 mr-1" />
+                    {errors.description.message}
+                  </p>
+                )}
               </div>
 
               {/* Categoria */}
@@ -278,8 +304,14 @@ export const AddTransactionForm = ({ onAdd, onClose, cards }: AddTransactionForm
                   <Tag className="w-4 h-4 text-indigo-600" />
                   Categoria *
                 </Label>
-                <Select value={category} onValueChange={(value) => setCategory(value)}>
-                  <SelectTrigger className="h-9 text-base rounded-xl border-2 border-slate-200 focus:border-indigo-400 bg-white/90 backdrop-blur-sm shadow-sm transition-all duration-200">
+                <Select onValueChange={(value) => setValue('category', value)}>
+                  <SelectTrigger 
+                    className={`h-9 text-base rounded-xl border-2 focus:border-indigo-400 bg-white/90 backdrop-blur-sm shadow-sm transition-all duration-200 ${errors.category ? 'border-red-500' : 'border-slate-200'}`}
+                    aria-label="Categoria da transação"
+                    aria-required="true"
+                    aria-invalid={errors.category ? "true" : "false"}
+                    aria-describedby={errors.category ? "category-error" : undefined}
+                  >
                     <SelectValue placeholder="Selecione uma categoria" />
                   </SelectTrigger>
                   <SelectContent className="bg-white/98 backdrop-blur-xl shadow-2xl border-0 rounded-xl max-h-60 z-[60]">
@@ -294,6 +326,13 @@ export const AddTransactionForm = ({ onAdd, onClose, cards }: AddTransactionForm
                     ))}
                   </SelectContent>
                 </Select>
+                <input type="hidden" {...register('category')} />
+                {errors.category && (
+                  <p id="category-error" className="text-red-500 text-xs flex items-center mt-1" role="alert">
+                    <AlertCircle className="w-3 h-3 mr-1" />
+                    {errors.category.message}
+                  </p>
+                )}
               </div>
 
               {/* Observações */}
@@ -304,11 +343,10 @@ export const AddTransactionForm = ({ onAdd, onClose, cards }: AddTransactionForm
                 </Label>
                 <Textarea
                   id="notes"
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
                   placeholder="Informações adicionais sobre a transação..."
                   rows={2}
                   className="text-sm rounded-xl border-2 border-slate-200 focus:border-indigo-400 bg-white/90 backdrop-blur-sm resize-none shadow-sm transition-all duration-200"
+                  {...register('notes')}
                 />
               </div>
 
@@ -319,7 +357,7 @@ export const AddTransactionForm = ({ onAdd, onClose, cards }: AddTransactionForm
                     <Smartphone className="w-4 h-4 text-indigo-600" />
                     Status do Recebimento
                   </Label>
-                  <Select value={receivedStatus} onValueChange={(value) => setReceivedStatus(value as 'received' | 'scheduled' | '')}>
+                  <Select onValueChange={(value) => setValue('receivedStatus', value as 'received' | 'scheduled')}>
                     <SelectTrigger className="h-9 text-base rounded-xl border-2 border-slate-200 focus:border-indigo-400 bg-white/90 backdrop-blur-sm shadow-sm transition-all duration-200">
                       <SelectValue placeholder="Selecione o status" />
                     </SelectTrigger>
@@ -332,7 +370,9 @@ export const AddTransactionForm = ({ onAdd, onClose, cards }: AddTransactionForm
                       </SelectItem>
                     </SelectContent>
                   </Select>
-                  {receivedStatus === 'scheduled' && (
+                  <input type="hidden" {...register('receivedStatus')} />
+                  
+                  {watchReceivedStatus === 'scheduled' && (
                     <div className="space-y-1 mt-3">
                       <Label htmlFor="scheduledDate" className="text-sm font-semibold text-slate-800 flex items-center gap-2">
                         <Calendar className="w-4 h-4 text-indigo-600" />
@@ -341,10 +381,8 @@ export const AddTransactionForm = ({ onAdd, onClose, cards }: AddTransactionForm
                       <Input
                         id="scheduledDate"
                         type="date"
-                        value={scheduledDate}
-                        onChange={(e) => setScheduledDate(e.target.value)}
                         className="h-9 text-base rounded-xl border-2 border-slate-200 focus:border-indigo-400 bg-white/90 backdrop-blur-sm shadow-sm transition-all duration-200"
-                        required
+                        {...register('scheduledDate')}
                       />
                     </div>
                   )}
@@ -361,23 +399,25 @@ export const AddTransactionForm = ({ onAdd, onClose, cards }: AddTransactionForm
                   <div className="grid grid-cols-2 gap-2">
                     <button
                       type="button"
-                      className={`p-2 rounded-xl border-2 transition-all duration-200 ${paymentMethod === 'pix' ? 'border-emerald-500 bg-emerald-50' : 'border-slate-200 bg-white'}`}
-                      onClick={() => setPaymentMethod('pix')}
+                      className={`p-2 rounded-xl border-2 transition-all duration-200 ${watchPaymentMethod === 'pix' ? 'border-emerald-500 bg-emerald-50' : 'border-slate-200 bg-white'}`}
+                      onClick={() => setValue('paymentMethod', 'pix')}
                     >
                       PIX
                     </button>
                     <button
                       type="button"
-                      className={`p-2 rounded-xl border-2 transition-all duration-200 ${paymentMethod === 'card' ? 'border-indigo-500 bg-indigo-50' : 'border-slate-200 bg-white'}`}
-                      onClick={() => setPaymentMethod('card')}
+                      className={`p-2 rounded-xl border-2 transition-all duration-200 ${watchPaymentMethod === 'card' ? 'border-indigo-500 bg-indigo-50' : 'border-slate-200 bg-white'}`}
+                      onClick={() => setValue('paymentMethod', 'card')}
                     >
                       Cartão
                     </button>
                   </div>
+                  <input type="hidden" {...register('paymentMethod')} />
                 </div>
               )}
+              
               {/* Seleção de Cartão */}
-              {type === 'expense' && paymentMethod === 'card' && (
+              {type === 'expense' && watchPaymentMethod === 'card' && (
                 <div className="space-y-1">
                   <Label className="text-sm font-semibold text-slate-800 flex items-center gap-2">
                     <CreditCard className="w-4 h-4 text-indigo-600" />
@@ -385,13 +425,11 @@ export const AddTransactionForm = ({ onAdd, onClose, cards }: AddTransactionForm
                   </Label>
                   <select
                     className="w-full border rounded px-3 py-2"
-                    value={selectedCardId}
-                    onChange={e => setSelectedCardId(e.target.value)}
-                    required
+                    {...register('cardId')}
                   >
                     <option value="">Selecione...</option>
                     {cards.map(card => (
-                      <option key={card.id} value={card.id}>
+                      <option key={card.id} value={card.id.toString()}>
                         {card.nome} - {card.banco}
                       </option>
                     ))}
@@ -400,7 +438,7 @@ export const AddTransactionForm = ({ onAdd, onClose, cards }: AddTransactionForm
               )}
 
               {/* Parcelas (apenas para despesas) */}
-              {type === 'expense' && paymentMethod === 'card' && (
+              {type === 'expense' && watchPaymentMethod === 'card' && (
                 <div className="space-y-1">
                   <Label htmlFor="installments" className="text-sm font-semibold text-slate-800 flex items-center gap-2">
                     <DollarSign className="w-4 h-4 text-indigo-600" />
@@ -410,10 +448,9 @@ export const AddTransactionForm = ({ onAdd, onClose, cards }: AddTransactionForm
                     id="installments"
                     type="number"
                     min="1"
-                    value={installments}
-                    onChange={(e) => setInstallments(e.target.value)}
                     placeholder="1"
                     className="h-9 text-base rounded-xl border-2 border-slate-200 focus:border-indigo-400 bg-white/90 backdrop-blur-sm shadow-sm transition-all duration-200"
+                    {...register('installments', { valueAsNumber: true })}
                   />
                 </div>
               )}

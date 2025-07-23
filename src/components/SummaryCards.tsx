@@ -1,6 +1,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TrendingUp, TrendingDown, Wallet } from "lucide-react";
+import { memo } from "react";
 
 interface SummaryCardsProps {
   totals: {
@@ -10,7 +11,7 @@ interface SummaryCardsProps {
   };
 }
 
-export const SummaryCards = ({ totals }: SummaryCardsProps) => {
+export const SummaryCards = memo(({ totals }: SummaryCardsProps) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-fade-in">
       <Card className="bg-gradient-to-br from-emerald-500 to-green-600 text-white border-0 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
@@ -74,4 +75,4 @@ export const SummaryCards = ({ totals }: SummaryCardsProps) => {
       </Card>
     </div>
   );
-};
+});

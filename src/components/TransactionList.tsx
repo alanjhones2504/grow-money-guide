@@ -13,9 +13,10 @@ interface TransactionListProps {
   transactions: Transaction[];
   onDelete: (id: string) => void;
   showAll: boolean;
+  updateTransaction?: (id: string, updated: Partial<Transaction>) => void;
 }
 
-export const TransactionList = ({ transactions, onDelete, showAll }: TransactionListProps) => {
+export const TransactionList = ({ transactions, onDelete, showAll, updateTransaction }: TransactionListProps) => {
   const isMobile = useIsMobile();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<any>({});
@@ -30,7 +31,9 @@ export const TransactionList = ({ transactions, onDelete, showAll }: Transaction
   };
 
   const handleEditSave = () => {
-    // TODO: Chamar função de update (precisa ser implementada no parent)
+    if (updateTransaction && editingId) {
+      updateTransaction(editingId, editForm);
+    }
     setEditingId(null);
   };
 

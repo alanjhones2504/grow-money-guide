@@ -3,11 +3,14 @@ import { BarChart3 } from "lucide-react";
 import { TransactionList } from "@/components/TransactionList";
 import { FinancialChart } from "@/components/FinancialChart";
 import { CategoryBreakdown } from "@/components/CategoryBreakdown";
+import { ExportButton } from "@/components/ExportButton";
 import { Transaction } from "@/types/Transaction";
+import { memo } from "react";
 
 interface MainContentProps {
   transactions: Transaction[];
   onDelete: (id: string) => void;
+  updateTransaction?: (id: string, updated: Partial<Transaction>) => void;
 }
 
 const AnalyticsSection = ({ transactions }: { transactions: Transaction[] }) => (
@@ -17,7 +20,7 @@ const AnalyticsSection = ({ transactions }: { transactions: Transaction[] }) => 
   </div>
 );
 
-export const MainContent = ({ transactions, onDelete }: MainContentProps) => {
+export const MainContent = memo(({ transactions, onDelete, updateTransaction }: MainContentProps) => {
   return (
     <div className="animate-fade-in">
       <Tabs defaultValue="overview" className="space-y-6">
@@ -42,14 +45,19 @@ export const MainContent = ({ transactions, onDelete }: MainContentProps) => {
             transactions={transactions.slice(0, 5)} 
             onDelete={onDelete}
             showAll={false}
+            updateTransaction={updateTransaction}
           />
         </TabsContent>
 
         <TabsContent value="transactions">
+          <div className="flex justify-end mb-4">
+            <ExportButton transactions={transactions} />
+          </div>
           <TransactionList 
             transactions={transactions} 
             onDelete={onDelete}
             showAll={true}
+            updateTransaction={updateTransaction}
           />
         </TabsContent>
 
@@ -59,4 +67,4 @@ export const MainContent = ({ transactions, onDelete }: MainContentProps) => {
       </Tabs>
     </div>
   );
-};
+});

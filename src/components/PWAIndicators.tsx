@@ -3,6 +3,7 @@ import { PWAOfflineIndicator } from "@/components/PWAOfflineIndicator";
 import { PWAUpdatePrompt } from "@/components/PWAUpdatePrompt";
 import { PWAStatusIndicator } from "@/components/PWAStatusIndicator";
 import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
+import { memo } from "react";
 
 interface PWAIndicatorsProps {
   pwaLifecycle: {
@@ -14,7 +15,7 @@ interface PWAIndicatorsProps {
   };
 }
 
-export const PWAIndicators = ({ pwaLifecycle }: PWAIndicatorsProps) => {
+export const PWAIndicators = memo(({ pwaLifecycle }: PWAIndicatorsProps) => {
   return (
     <>
       <PWAOfflineIndicator isOnline={pwaLifecycle.isOnline} />
@@ -29,4 +30,4 @@ export const PWAIndicators = ({ pwaLifecycle }: PWAIndicatorsProps) => {
       <PWAInstallPrompt />
     </>
   );
-};
+});
