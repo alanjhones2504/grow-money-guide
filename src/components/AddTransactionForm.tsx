@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { X, PlusCircle, DollarSign, Calendar, FileText, Tag, StickyNote, CreditCard, Smartphone, AlertCircle } from "lucide-react";
 import { Transaction } from "@/types/Transaction";
-import { transactionSchema } from "@/schemas/transaction.schema";
+import { transactionSchema, TransactionFormData } from "@/schemas/transaction.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 
@@ -87,7 +87,7 @@ export const AddTransactionForm = ({ onAdd, onClose, cards }: AddTransactionForm
     setValue('cardId', '');
   };
 
-  const onSubmit = (data: any) => {
+  const onSubmit = (data: TransactionFormData) => {
     try {
       // Prepare transaction data
       const newTransaction: Omit<Transaction, 'id'> = {
