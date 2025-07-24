@@ -13,6 +13,7 @@ import { MainContent } from "@/components/MainContent";
 import { CardExpenseSummary } from "@/components/CardExpenseSummary";
 import { NextBillsReport } from "@/components/NextBillsReport";
 import { CardForm } from "@/components/CardForm";
+import { DataManager } from "@/components/DataManager";
 import { Transaction } from "@/types/Transaction";
 
 const Index = () => {
@@ -34,6 +35,11 @@ const Index = () => {
   const handleAddTransaction = (transaction: Omit<Transaction, 'id'>) => {
     addTransaction(transaction);
     setShowAddForm(false);
+  };
+
+  const handleDataChange = () => {
+    // Recarregar dados quando houver mudanças (importação/limpeza)
+    window.location.reload();
   };
 
   return (
@@ -89,6 +95,9 @@ const Index = () => {
             handleAddCard={handleAddCard}
             deleteCard={deleteCard}
           />
+
+          {/* Gerenciador de Dados Locais */}
+          <DataManager onDataChange={handleDataChange} />
         </div>
       </div>
     </ScrollArea>

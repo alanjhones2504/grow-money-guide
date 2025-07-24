@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Card } from "@/types/Card";
+import { CardStorage } from "@/utils/storage";
 
 export const useCards = () => {
   const [cards, setCards] = useState<Card[]>([]);
@@ -10,27 +11,25 @@ export const useCards = () => {
 
   // Carregar cartões do localStorage ao iniciar
   useEffect(() => {
-    const savedCards = localStorage.getItem("cards");
-    if (savedCards) {
-      try {
-        setCards(JSON.parse(savedCards));
-      } catch (error) {
-        console.error('Erro ao carregar cartões:', error);
-        toast({
-          title: "Erro ao carregar cartões",
-          description: "Não foi possível carregar seus cartões salvos.",
-          variant: "destructive"
-        });
-      }
+    try {
+      const savedCards = CardStorage.load();
+      setCards(savedCards);
+    } catch (error) {
+      console.error('Erro ao carregar cartões:', error);
+      toast({
+        title: "Erro ao carregar cartões",
+        description: "Não foi possível carregar seus cartões salvos.",
+        variant: "destructive"
+      });
     }
   }, [toast]);
 
   // Salvar cartões no localStorage sempre que cards mudar
   useEffect(() => {
-    try {
-      localStorage.setItem("cards", JSON.stringify(cards));
-    } catch (error) {
-      console.error('Erro ao salvar cartões:', error);
+    if (cards.length === 0) return; // Não salvar array vazio no primeiro carregamento
+    
+    const success = CardStorage.save(cards);
+    if (!success) {
       toast({
         title: "Erro ao salvar cartões",
         description: "Não foi possível salvar seus cartões.",

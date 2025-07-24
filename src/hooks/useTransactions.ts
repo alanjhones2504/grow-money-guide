@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Transaction } from "@/types/Transaction";
 import { Button } from "@/components/ui/button";
+import { TransactionStorage } from "@/utils/storage";
 
 export const useTransactions = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -10,17 +11,8 @@ export const useTransactions = () => {
   // Load transactions from localStorage on component mount
   useEffect(() => {
     try {
-      const savedTransactions = localStorage.getItem('financial-transactions');
-      if (savedTransactions) {
-        const parsedTransactions = JSON.parse(savedTransactions);
-        
-        // Validar se o que foi carregado é um array
-        if (!Array.isArray(parsedTransactions)) {
-          throw new Error('Formato de dados inválido');
-        }
-        
-        setTransactions(parsedTransactions);
-      }
+      const savedTransactions = TransactionStorage.load();
+      setTransactions(savedTransactions);
     } catch (error) {
       console.error('Erro ao carregar transações:', error);
       toast({
@@ -28,26 +20,16 @@ export const useTransactions = () => {
         description: "Não foi possível carregar suas transações salvas.",
         variant: "destructive"
       });
-      // Iniciar com array vazio em caso de erro
       setTransactions([]);
     }
   }, [toast]);
 
   // Save transactions to localStorage whenever transactions change
   useEffect(() => {
-    try {
-      // Verificar se há espaço disponível no localStorage
-      const testKey = '___test_key___';
-      try {
-        localStorage.setItem(testKey, '1');
-        localStorage.removeItem(testKey);
-      } catch (e) {
-        throw new Error('Armazenamento local indisponível');
-      }
-      
-      localStorage.setItem('financial-transactions', JSON.stringify(transactions));
-    } catch (error) {
-      console.error('Erro ao salvar transações:', error);
+    if (transactions.length === 0) return; // Não salvar array vazio no primeiro carregamento
+    
+    const success = TransactionStorage.save(transactions);
+    if (!success) {
       toast({
         title: "Erro ao salvar transações",
         description: "Suas transações não puderam ser salvas localmente. Verifique o espaço disponível.",
