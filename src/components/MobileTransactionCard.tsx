@@ -15,15 +15,26 @@ export const MobileTransactionCard = ({ transaction, onDelete }: MobileTransacti
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
           <h3 className="font-bold text-slate-800 text-base truncate">{transaction.description}</h3>
-          <Badge 
-            variant={transaction.type === 'income' ? 'default' : 'destructive'}
-            className={`${transaction.type === 'income' 
-              ? 'bg-gradient-to-r from-emerald-500 to-green-600 text-white shadow-md' 
-              : 'bg-gradient-to-r from-red-500 to-rose-600 text-white shadow-md'
-            } font-semibold px-2 py-1 rounded-lg text-xs mt-1`}
-          >
-            {transaction.category}
-          </Badge>
+          <div className="flex items-center gap-2 mt-1">
+            <Badge 
+              variant={transaction.type === 'income' ? 'default' : 'destructive'}
+              className={`${transaction.type === 'income' 
+                ? 'bg-gradient-to-r from-emerald-500 to-green-600 text-white shadow-md' 
+                : 'bg-gradient-to-r from-red-500 to-rose-600 text-white shadow-md'
+              } font-semibold px-2 py-1 rounded-lg text-xs`}
+            >
+              {transaction.category}
+            </Badge>
+            {/* Indicador de parcelas */}
+            {transaction.type === 'expense' && transaction.installments && transaction.installments > 1 && (
+              <Badge 
+                variant="outline"
+                className="bg-blue-50 text-blue-700 border-blue-200 font-semibold px-2 py-1 rounded-lg text-xs"
+              >
+                1/{transaction.installments}x
+              </Badge>
+            )}
+          </div>
         </div>
         <div className="flex items-center gap-2">
           <span
@@ -31,7 +42,12 @@ export const MobileTransactionCard = ({ transaction, onDelete }: MobileTransacti
               transaction.type === 'income' ? 'text-emerald-600' : 'text-red-600'
             }`}
           >
-            {transaction.type === 'income' ? '+' : '-'}R$ {transaction.amount.toFixed(2)}
+            {transaction.type === 'income' ? '+' : '-'}R$ {
+              // Para despesas parceladas, mostrar valor da parcela
+              transaction.type === 'expense' && transaction.installments && transaction.installments > 1
+                ? (transaction.amount / transaction.installments).toFixed(2)
+                : transaction.amount.toFixed(2)
+            }
           </span>
           <Button
             variant="ghost"

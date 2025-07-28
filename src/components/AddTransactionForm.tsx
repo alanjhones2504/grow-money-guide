@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState, useEffect } from "react";
+import { Card as UICard, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -7,22 +7,16 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { X, PlusCircle, DollarSign, Calendar, FileText, Tag, StickyNote, CreditCard, Smartphone, AlertCircle } from "lucide-react";
 import { Transaction } from "@/types/Transaction";
+import { Card } from "@/types/Card";
 import { transactionSchema, TransactionFormData } from "@/schemas/transaction.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-
-interface Card {
-  id: number;
-  nome: string;
-  banco: string;
-  limite: string;
-  fechamento: string;
-}
 
 interface AddTransactionFormProps {
   onAdd: (transaction: Omit<Transaction, 'id'>) => void;
   onClose: () => void;
   cards: Card[];
+  initialType?: 'income' | 'expense';
 }
 
 const incomeCategories = [
@@ -45,8 +39,8 @@ const expenseCategories = [
   "Outros"
 ];
 
-export const AddTransactionForm = ({ onAdd, onClose, cards }: AddTransactionFormProps) => {
-  const [type, setType] = useState<'income' | 'expense'>('expense');
+export const AddTransactionForm = ({ onAdd, onClose, cards, initialType }: AddTransactionFormProps) => {
+  const [type, setType] = useState<'income' | 'expense'>(initialType || 'expense');
   const today = new Date().toISOString().split('T')[0];
   
   const { 
@@ -56,10 +50,10 @@ export const AddTransactionForm = ({ onAdd, onClose, cards }: AddTransactionForm
     setValue,
     watch,
     reset
-  } = useForm({
+  } = useForm<TransactionFormData>({
     resolver: zodResolver(transactionSchema),
     defaultValues: {
-      type: 'expense',
+      type: initialType || 'expense',
       amount: undefined,
       description: '',
       category: '',
@@ -78,24 +72,32 @@ export const AddTransactionForm = ({ onAdd, onClose, cards }: AddTransactionForm
   const watchReceivedStatus = watch('receivedStatus');
 
   // Handle type change
+  useEffect(() => {
+    setValue('type', type);
+  }, [type, setValue]);
+
   const handleTypeChange = (newType: 'income' | 'expense') => {
-    setType(newType);
-    setValue('type', newType);
-    setValue('category', '');
-    setValue('paymentMethod', undefined);
-    setValue('receivedStatus', undefined);
-    setValue('cardId', '');
+    if (!initialType) { // Só permite mudança se não foi definido um tipo inicial
+      setType(newType);
+      setValue('type', newType);
+      setValue('category', '');
+      setValue('paymentMethod', undefined);
+      setValue('receivedStatus', undefined);
+      setValue('cardId', '');
+    }
   };
 
   const onSubmit = (data: TransactionFormData) => {
     try {
-      // Prepare transaction data
+      // Prepare transaction data with default values
       const newTransaction: Omit<Transaction, 'id'> = {
         type: data.type,
         amount: Number(data.amount),
         description: data.description,
-        category: data.category,
-        date: data.date,
+        // Se categoria não foi preenchida, usar "Outros"
+        category: data.category || 'Outros',
+        // Se data não foi preenchida, usar data atual
+        date: data.date || today,
         notes: data.notes || undefined,
       };
 
@@ -135,7 +137,7 @@ export const AddTransactionForm = ({ onAdd, onClose, cards }: AddTransactionForm
 
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-fade-in">
-      <Card className="w-full max-w-2xl bg-white/98 backdrop-blur-xl shadow-2xl border-0 animate-scale-in overflow-hidden max-h-[90vh] flex flex-col">
+      <UICard className="w-full max-w-2xl bg-white/98 backdrop-blur-xl shadow-2xl border-0 animate-scale-in overflow-hidden max-h-[90vh] flex flex-col">
         {/* Header */}
         <CardHeader className="pb-4 bg-gradient-to-br from-indigo-600 via-purple-600 to-cyan-600 text-white relative overflow-hidden flex-shrink-0">
           <div className="absolute inset-0 bg-white/10 backdrop-blur-sm"></div>
@@ -145,9 +147,11 @@ export const AddTransactionForm = ({ onAdd, onClose, cards }: AddTransactionForm
                 <PlusCircle className="w-5 h-5" />
               </div>
               <div>
-                <h2 className="text-xl font-bold">Nova Transação</h2>
+                <h2 className="text-xl font-bold">
+                  {type === 'income' ? 'Nova Receita' : 'Nova Despesa'}
+                </h2>
                 <p className="text-white/80 text-sm font-normal mt-1">
-                  Registre uma nova receita ou despesa
+                  Apenas valor e descrição são obrigatórios!
                 </p>
               </div>
             </div>
@@ -166,57 +170,59 @@ export const AddTransactionForm = ({ onAdd, onClose, cards }: AddTransactionForm
         <div className="flex-1 min-h-0 overflow-auto">
           <CardContent className="p-2 bg-gradient-to-br from-slate-50 to-white">
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
-              {/* Tipo de Transação */}
-              <div className="space-y-1">
-                <Label className="text-base font-semibold text-slate-800 flex items-center gap-2">
-                  <Tag className="w-4 h-4 text-indigo-600" />
-                  Tipo de Transação
-                </Label>
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="relative">
-                    <input
-                      type="radio"
-                      id="income"
-                      value="income"
-                      checked={type === 'income'}
-                      onChange={() => handleTypeChange('income')}
-                      className="peer sr-only"
-                      {...register('type')}
-                    />
-                    <label
-                      htmlFor="income"
-                      className="flex items-center justify-center space-x-2 p-2 rounded-xl bg-gradient-to-br from-emerald-50 to-green-100 border-2 border-emerald-200 cursor-pointer transition-all duration-300 hover:shadow-lg hover:scale-105 peer-checked:border-emerald-500 peer-checked:shadow-xl peer-checked:bg-gradient-to-br peer-checked:from-emerald-100 peer-checked:to-green-200 text-sm"
-                    >
-                      <div className="text-lg">💰</div>
-                      <div className="text-center">
-                        <div className="text-emerald-700 font-semibold">Receita</div>
-                        <div className="text-emerald-600 text-xs">Ganhos</div>
-                      </div>
-                    </label>
-                  </div>
-                  <div className="relative">
-                    <input
-                      type="radio"
-                      id="expense"
-                      value="expense"
-                      checked={type === 'expense'}
-                      onChange={() => handleTypeChange('expense')}
-                      className="peer sr-only"
-                      {...register('type')}
-                    />
-                    <label
-                      htmlFor="expense"
-                      className="flex items-center justify-center space-x-2 p-2 rounded-xl bg-gradient-to-br from-red-50 to-rose-100 border-2 border-red-200 cursor-pointer transition-all duration-300 hover:shadow-lg hover:scale-105 peer-checked:border-red-500 peer-checked:shadow-xl peer-checked:bg-gradient-to-br peer-checked:from-red-100 peer-checked:to-rose-200 text-sm"
-                    >
-                      <div className="text-lg">💸</div>
-                      <div className="text-center">
-                        <div className="text-red-700 font-semibold">Despesa</div>
-                        <div className="text-red-600 text-xs">Dinheiro que sai</div>
-                      </div>
-                    </label>
+              {/* Tipo de Transação - Só mostra se não foi definido um tipo inicial */}
+              {!initialType && (
+                <div className="space-y-1">
+                  <Label className="text-base font-semibold text-slate-800 flex items-center gap-2">
+                    <Tag className="w-4 h-4 text-indigo-600" />
+                    Tipo de Transação
+                  </Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="relative">
+                      <input
+                        type="radio"
+                        id="income"
+                        value="income"
+                        checked={type === 'income'}
+                        onChange={() => handleTypeChange('income')}
+                        className="peer sr-only"
+                        {...register('type')}
+                      />
+                      <label
+                        htmlFor="income"
+                        className="flex items-center justify-center space-x-2 p-2 rounded-xl bg-gradient-to-br from-emerald-50 to-green-100 border-2 border-emerald-200 cursor-pointer transition-all duration-300 hover:shadow-lg hover:scale-105 peer-checked:border-emerald-500 peer-checked:shadow-xl peer-checked:bg-gradient-to-br peer-checked:from-emerald-100 peer-checked:to-green-200 text-sm"
+                      >
+                        <div className="text-lg">💰</div>
+                        <div className="text-center">
+                          <div className="text-emerald-700 font-semibold">Receita</div>
+                          <div className="text-emerald-600 text-xs">Ganhos</div>
+                        </div>
+                      </label>
+                    </div>
+                    <div className="relative">
+                      <input
+                        type="radio"
+                        id="expense"
+                        value="expense"
+                        checked={type === 'expense'}
+                        onChange={() => handleTypeChange('expense')}
+                        className="peer sr-only"
+                        {...register('type')}
+                      />
+                      <label
+                        htmlFor="expense"
+                        className="flex items-center justify-center space-x-2 p-2 rounded-xl bg-gradient-to-br from-red-50 to-rose-100 border-2 border-red-200 cursor-pointer transition-all duration-300 hover:shadow-lg hover:scale-105 peer-checked:border-red-500 peer-checked:shadow-xl peer-checked:bg-gradient-to-br peer-checked:from-red-100 peer-checked:to-rose-200 text-sm"
+                      >
+                        <div className="text-lg">💸</div>
+                        <div className="text-center">
+                          <div className="text-red-700 font-semibold">Despesa</div>
+                          <div className="text-red-600 text-xs">Dinheiro que sai</div>
+                        </div>
+                      </label>
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
 
               {/* Valor e Data */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
@@ -253,13 +259,12 @@ export const AddTransactionForm = ({ onAdd, onClose, cards }: AddTransactionForm
                 <div className="space-y-1">
                   <Label htmlFor="date" className="text-sm font-semibold text-slate-800 flex items-center gap-2">
                     <Calendar className="w-4 h-4 text-indigo-600" />
-                    Data
+                    Data <span className="text-slate-500 font-normal text-xs">(opcional - padrão: hoje)</span>
                   </Label>
                   <Input
                     id="date"
                     type="date"
                     aria-label="Data da transação"
-                    aria-required="true"
                     aria-invalid={errors.date ? "true" : "false"}
                     aria-describedby={errors.date ? "date-error" : undefined}
                     className={`h-9 text-base rounded-xl border-2 focus:border-indigo-400 bg-white/90 backdrop-blur-sm shadow-sm transition-all duration-200 ${errors.date ? 'border-red-500' : 'border-slate-200'}`}
@@ -302,17 +307,16 @@ export const AddTransactionForm = ({ onAdd, onClose, cards }: AddTransactionForm
               <div className="space-y-1">
                 <Label htmlFor="category" className="text-sm font-semibold text-slate-800 flex items-center gap-2">
                   <Tag className="w-4 h-4 text-indigo-600" />
-                  Categoria *
+                  Categoria <span className="text-slate-500 font-normal text-xs">(opcional - padrão: "Outros")</span>
                 </Label>
                 <Select onValueChange={(value) => setValue('category', value)}>
                   <SelectTrigger 
                     className={`h-9 text-base rounded-xl border-2 focus:border-indigo-400 bg-white/90 backdrop-blur-sm shadow-sm transition-all duration-200 ${errors.category ? 'border-red-500' : 'border-slate-200'}`}
                     aria-label="Categoria da transação"
-                    aria-required="true"
                     aria-invalid={errors.category ? "true" : "false"}
                     aria-describedby={errors.category ? "category-error" : undefined}
                   >
-                    <SelectValue placeholder="Selecione uma categoria" />
+                    <SelectValue placeholder="Selecione ou deixe vazio (padrão: Outros)" />
                   </SelectTrigger>
                   <SelectContent className="bg-white/98 backdrop-blur-xl shadow-2xl border-0 rounded-xl max-h-60 z-[60]">
                     {categories.map((cat) => (
@@ -476,7 +480,7 @@ export const AddTransactionForm = ({ onAdd, onClose, cards }: AddTransactionForm
             </form>
           </CardContent>
         </div>
-      </Card>
+      </UICard>
     </div>
   );
 };

@@ -61,7 +61,7 @@ export const useTransactions = () => {
 
   const addTransaction = useCallback((transaction: Omit<Transaction, 'id'>) => {
     try {
-      // Validar dados da transação
+      // Validar apenas os dados essenciais
       if (!transaction.amount || transaction.amount <= 0) {
         throw new Error('O valor da transação deve ser maior que zero');
       }
@@ -70,16 +70,13 @@ export const useTransactions = () => {
         throw new Error('A descrição da transação é obrigatória');
       }
       
-      if (!transaction.category || transaction.category.trim() === '') {
-        throw new Error('A categoria da transação é obrigatória');
-      }
-      
       const newTransaction: Transaction = {
         ...transaction,
         id: Date.now().toString(),
-        // Sanitizar dados
+        // Sanitizar e aplicar valores padrão
         description: transaction.description.trim(),
-        category: transaction.category.trim(),
+        category: transaction.category?.trim() || 'Outros',
+        date: transaction.date || new Date().toISOString().split('T')[0],
         notes: transaction.notes ? transaction.notes.trim() : undefined
       };
       
@@ -132,9 +129,16 @@ export const useTransactions = () => {
       .filter(t => t.type === 'income')
       .reduce((sum, t) => sum + t.amount, 0);
     
+    // Para despesas, calcular o valor da parcela mensal (não o valor total)
     const totalExpenses = transactions
       .filter(t => t.type === 'expense')
-      .reduce((sum, t) => sum + t.amount, 0);
+      .reduce((sum, t) => {
+        // Se tem parcelas, dividir o valor total pelo número de parcelas
+        const monthlyAmount = t.installments && t.installments > 1 
+          ? t.amount / t.installments 
+          : t.amount;
+        return sum + monthlyAmount;
+      }, 0);
     
     return {
       income: totalIncome,

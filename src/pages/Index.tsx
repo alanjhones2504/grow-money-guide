@@ -1,7 +1,5 @@
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { PlusCircle } from "lucide-react";
 import { AddTransactionForm } from "@/components/AddTransactionForm";
 import { usePWALifecycle } from "@/hooks/usePWALifecycle";
 import { useTransactions } from "@/hooks/useTransactions";
@@ -18,6 +16,7 @@ import { Transaction } from "@/types/Transaction";
 
 const Index = () => {
   const [showAddForm, setShowAddForm] = useState(false);
+  const [transactionType, setTransactionType] = useState<'income' | 'expense'>('expense');
   const pwaLifecycle = usePWALifecycle();
   const { transactions, addTransaction, deleteTransaction, calculateTotals, updateTransaction } = useTransactions();
   const { 
@@ -42,6 +41,17 @@ const Index = () => {
     window.location.reload();
   };
 
+  // Funções para abrir formulário com tipo específico
+  const handleAddIncome = () => {
+    setTransactionType('income');
+    setShowAddForm(true);
+  };
+
+  const handleAddExpense = () => {
+    setTransactionType('expense');
+    setShowAddForm(true);
+  };
+
   return (
     <ScrollArea className="h-screen">
       <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-cyan-50 p-4 sm:p-6 lg:p-8">
@@ -53,18 +63,17 @@ const Index = () => {
           <AppHeader />
 
           {/* Summary Cards */}
-          <SummaryCards totals={totals} />
+          <SummaryCards 
+            totals={totals} 
+            onAddIncome={handleAddIncome}
+            onAddExpense={handleAddExpense}
+          />
 
-          {/* Add Transaction Button */}
-          <div className="flex justify-center animate-fade-in">
-            <Button 
-              onClick={() => setShowAddForm(true)}
-              size="lg"
-              className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-10 py-4 text-lg font-semibold shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 rounded-2xl border-0"
-            >
-              <PlusCircle className="w-6 h-6 mr-3" />
-              Nova Transação
-            </Button>
+          {/* Dica de uso */}
+          <div className="text-center animate-fade-in">
+            <p className="text-slate-600 text-lg font-medium">
+              💡 Clique nos cards acima para adicionar receitas ou despesas rapidamente
+            </p>
           </div>
 
           {/* Main Content */}
@@ -76,6 +85,7 @@ const Index = () => {
               onAdd={handleAddTransaction}
               onClose={() => setShowAddForm(false)}
               cards={cards}
+              initialType={transactionType}
             />
           )}
 

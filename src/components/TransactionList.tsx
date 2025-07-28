@@ -133,15 +133,26 @@ export const TransactionList = ({ transactions, onDelete, showAll, updateTransac
                       <div className="flex-1">
                         <div className="flex items-center gap-4 mb-2">
                           <h3 className="font-bold text-slate-800 text-lg">{transaction.description}</h3>
-                          <Badge 
-                            variant={transaction.type === 'income' ? 'default' : 'destructive'}
-                            className={`${transaction.type === 'income' 
-                              ? 'bg-gradient-to-r from-emerald-500 to-green-600 text-white shadow-md' 
-                              : 'bg-gradient-to-r from-red-500 to-rose-600 text-white shadow-md'
-                            } font-semibold px-3 py-1 rounded-lg`}
-                          >
-                            {transaction.category}
-                          </Badge>
+                          <div className="flex items-center gap-2">
+                            <Badge 
+                              variant={transaction.type === 'income' ? 'default' : 'destructive'}
+                              className={`${transaction.type === 'income' 
+                                ? 'bg-gradient-to-r from-emerald-500 to-green-600 text-white shadow-md' 
+                                : 'bg-gradient-to-r from-red-500 to-rose-600 text-white shadow-md'
+                              } font-semibold px-3 py-1 rounded-lg`}
+                            >
+                              {transaction.category}
+                            </Badge>
+                            {/* Indicador de parcelas */}
+                            {transaction.type === 'expense' && transaction.installments && transaction.installments > 1 && (
+                              <Badge 
+                                variant="outline"
+                                className="bg-blue-50 text-blue-700 border-blue-200 font-semibold px-2 py-1 rounded-lg text-xs"
+                              >
+                                1/{transaction.installments}x
+                              </Badge>
+                            )}
+                          </div>
                         </div>
                         <div className="flex items-center gap-6 text-sm text-slate-600">
                           <span className="flex items-center gap-2 font-medium">
@@ -161,7 +172,12 @@ export const TransactionList = ({ transactions, onDelete, showAll, updateTransac
                             transaction.type === 'income' ? 'text-emerald-600' : 'text-red-600'
                           }`}
                         >
-                          {transaction.type === 'income' ? '+' : '-'}R$ {transaction.amount.toFixed(2)}
+                          {transaction.type === 'income' ? '+' : '-'}R$ {
+                            // Para despesas parceladas, mostrar valor da parcela
+                            transaction.type === 'expense' && transaction.installments && transaction.installments > 1
+                              ? (transaction.amount / transaction.installments).toFixed(2)
+                              : transaction.amount.toFixed(2)
+                          }
                         </span>
                         <Button
                           variant="ghost"

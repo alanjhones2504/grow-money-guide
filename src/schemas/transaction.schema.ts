@@ -4,8 +4,8 @@ export const transactionSchema = z.object({
   type: z.enum(["income", "expense"]),
   amount: z.number().positive("O valor deve ser maior que zero"),
   description: z.string().min(1, "A descrição é obrigatória"),
-  category: z.string().min(1, "A categoria é obrigatória"),
-  date: z.string().min(1, "A data é obrigatória"),
+  category: z.string().optional(), // Categoria não obrigatória
+  date: z.string().optional(), // Data não obrigatória (usará data atual)
   notes: z.string().optional(),
   paymentMethod: z.enum(["pix", "card"]).optional(),
   installments: z.number().int().positive().optional(),
