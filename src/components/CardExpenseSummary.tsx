@@ -17,8 +17,10 @@ export const CardExpenseSummary = memo(({ cards, transactions }: CardExpenseSumm
             .filter(t => t.type === 'expense' && t.paymentMethod === 'card' && t.cardId === String(card.id))
             .reduce((sum, t) => sum + t.amount, 0);
           return (
-            <li key={card.id} className="flex justify-between items-center">
-              <span className="font-medium text-indigo-700">{card.nome} ({card.banco})</span>
+            <li key={card.id} className={`flex justify-between items-center ${card.isPaid ? 'opacity-60' : ''}`}>
+              <span className={`font-medium ${card.isPaid ? 'text-green-600 line-through' : 'text-indigo-700'}`}>
+                {card.nome} ({card.banco}) {card.isPaid && '✅ Pago'}
+              </span>
               <span className="font-bold">R$ {total.toFixed(2)}</span>
             </li>
           );

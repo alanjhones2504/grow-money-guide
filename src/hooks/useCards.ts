@@ -75,6 +75,30 @@ export const useCards = () => {
     });
   }, [toast]);
 
+  const markCardAsPaid = useCallback((id: number) => {
+    setCards(prev => prev.map(card => 
+      card.id === id 
+        ? { ...card, isPaid: true, paidDate: new Date().toISOString().split('T')[0] }
+        : card
+    ));
+    toast({
+      title: "Cartão marcado como pago! ✅",
+      description: "A fatura foi marcada como paga e removida das metas diárias."
+    });
+  }, [toast]);
+
+  const markCardAsUnpaid = useCallback((id: number) => {
+    setCards(prev => prev.map(card => 
+      card.id === id 
+        ? { ...card, isPaid: false, paidDate: undefined }
+        : card
+    ));
+    toast({
+      title: "Cartão desmarcado",
+      description: "A fatura voltou para as metas diárias."
+    });
+  }, [toast]);
+
   return {
     cards,
     cardForm,
@@ -82,6 +106,8 @@ export const useCards = () => {
     setShowCardForm,
     handleCardInput,
     handleAddCard,
-    deleteCard
+    deleteCard,
+    markCardAsPaid,
+    markCardAsUnpaid
   };
 };

@@ -8,7 +8,9 @@ import {
   AlertTriangle, 
   CheckCircle,
   Clock,
-  DollarSign
+  DollarSign,
+  Check,
+  Undo2
 } from "lucide-react";
 import { useDailyGoals, useDailyProgress } from "@/hooks/useDailyGoals";
 import { Card as CardType } from "@/types/Card";
@@ -18,9 +20,11 @@ import { memo } from "react";
 interface DailyGoalsProps {
   cards: CardType[];
   transactions: Transaction[];
+  onMarkAsPaid: (cardId: number) => void;
+  onMarkAsUnpaid: (cardId: number) => void;
 }
 
-export const DailyGoals = memo(({ cards, transactions }: DailyGoalsProps) => {
+export const DailyGoals = memo(({ cards, transactions, onMarkAsPaid, onMarkAsUnpaid }: DailyGoalsProps) => {
   const { goals, totalDailyGoal, nextDueDate, urgentGoals } = useDailyGoals(cards, transactions);
   const progress = useDailyProgress(transactions, totalDailyGoal);
 
@@ -141,7 +145,7 @@ export const DailyGoals = memo(({ cards, transactions }: DailyGoalsProps) => {
                 }`}
               >
                 <div className="flex items-center justify-between mb-3">
-                  <div>
+                  <div className="flex-1">
                     <h3 className="font-bold text-slate-800">
                       {goal.cardName} - {goal.banco}
                     </h3>
@@ -154,13 +158,25 @@ export const DailyGoals = memo(({ cards, transactions }: DailyGoalsProps) => {
                       </span>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <div className="text-lg font-bold text-slate-800">
-                      R$ {goal.dailyGoal.toFixed(2)}/dia
+                  
+                  <div className="flex items-center gap-3">
+                    <div className="text-right">
+                      <div className="text-lg font-bold text-slate-800">
+                        R$ {goal.dailyGoal.toFixed(2)}/dia
+                      </div>
+                      <div className="text-sm text-slate-600">
+                        Total: R$ {goal.totalAmount.toFixed(2)}
+                      </div>
                     </div>
-                    <div className="text-sm text-slate-600">
-                      Total: R$ {goal.totalAmount.toFixed(2)}
-                    </div>
+                    
+                    {/* Botão Marcar como Pago */}
+                    <button
+                      onClick={() => onMarkAsPaid(goal.cardId)}
+                      className="p-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-all duration-200 hover:scale-105 shadow-md hover:shadow-lg group"
+                      title="Marcar como pago"
+                    >
+                      <Check className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                    </button>
                   </div>
                 </div>
                 
@@ -177,6 +193,51 @@ export const DailyGoals = memo(({ cards, transactions }: DailyGoalsProps) => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Cartões Pagos */}
+      {cards.filter(card => card.isPaid).length > 0 && (
+        <Card className="bg-green-50 border-green-200 shadow-xl">
+          <CardHeader className="pb-4">
+            <CardTitle className="flex items-center gap-3 text-xl font-bold text-green-700">
+              <div className="p-2 bg-green-500 rounded-xl shadow-lg">
+                <CheckCircle className="w-5 h-5 text-white" />
+              </div>
+              Cartões Pagos Este Mês
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {cards.filter(card => card.isPaid).map(card => (
+                <div 
+                  key={card.id} 
+                  className="p-4 bg-white rounded-xl border-2 border-green-200 flex items-center justify-between"
+                >
+                  <div>
+                    <h3 className="font-bold text-slate-800">
+                      {card.nome} - {card.banco}
+                    </h3>
+                    <div className="flex items-center gap-2 mt-1">
+                      <CheckCircle className="w-4 h-4 text-green-500" />
+                      <span className="text-sm text-green-600">
+                        Pago em {card.paidDate ? new Date(card.paidDate).toLocaleDateString('pt-BR') : 'hoje'}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  {/* Botão para desmarcar */}
+                  <button
+                    onClick={() => onMarkAsUnpaid(card.id)}
+                    className="p-2 bg-gray-400 hover:bg-gray-500 text-white rounded-lg transition-all duration-200 hover:scale-105 shadow-md hover:shadow-lg group"
+                    title="Desmarcar como pago"
+                  >
+                    <Undo2 className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 });

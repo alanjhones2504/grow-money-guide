@@ -27,7 +27,9 @@ const Index = () => {
     setShowCardForm, 
     handleCardInput, 
     handleAddCard,
-    deleteCard
+    deleteCard,
+    markCardAsPaid,
+    markCardAsUnpaid
   } = useCards();
 
   const totals = calculateTotals();
@@ -71,7 +73,12 @@ const Index = () => {
           />
 
           {/* Metas Diárias */}
-          <DailyGoals cards={cards} transactions={transactions} />
+          <DailyGoals 
+            cards={cards} 
+            transactions={transactions} 
+            onMarkAsPaid={markCardAsPaid}
+            onMarkAsUnpaid={markCardAsUnpaid}
+          />
 
           {/* Dica de uso */}
           <div className="text-center animate-fade-in">

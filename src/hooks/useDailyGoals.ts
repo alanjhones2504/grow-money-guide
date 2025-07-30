@@ -27,7 +27,9 @@ export const useDailyGoals = (cards: Card[], transactions: Transaction[]) => {
     const currentMonth = today.getMonth();
     const currentYear = today.getFullYear();
 
-    const goals: DailyGoal[] = cards.map(card => {
+    const goals: DailyGoal[] = cards
+      .filter(card => !card.isPaid) // Excluir cartões já pagos
+      .map(card => {
       // Calcular total gasto no cartão este mês
       const totalSpent = transactions
         .filter(t => 
