@@ -3,5 +3,5 @@ export interface Card {
   nome: string;
   banco: string;
   limite: string;
-  fechamento: string;
+  diaVencimento: number; // Dia do mês que vence a fatura (1-31)
 }

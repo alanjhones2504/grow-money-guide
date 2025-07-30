@@ -1,0 +1,182 @@
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { 
+  Target, 
+  Calendar, 
+  TrendingUp, 
+  AlertTriangle, 
+  CheckCircle,
+  Clock,
+  DollarSign
+} from "lucide-react";
+import { useDailyGoals, useDailyProgress } from "@/hooks/useDailyGoals";
+import { Card as CardType } from "@/types/Card";
+import { Transaction } from "@/types/Transaction";
+import { memo } from "react";
+
+interface DailyGoalsProps {
+  cards: CardType[];
+  transactions: Transaction[];
+}
+
+export const DailyGoals = memo(({ cards, transactions }: DailyGoalsProps) => {
+  const { goals, totalDailyGoal, nextDueDate, urgentGoals } = useDailyGoals(cards, transactions);
+  const progress = useDailyProgress(transactions, totalDailyGoal);
+
+  if (goals.length === 0) {
+    return (
+      <Card className="bg-white/80 backdrop-blur-sm shadow-xl border-0">
+        <CardHeader className="pb-4">
+          <CardTitle className="flex items-center gap-3 text-xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+            <div className="p-2 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl shadow-lg">
+              <Target className="w-5 h-5 text-white" />
+            </div>
+            Metas Diárias
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-8 space-y-4">
+            <div className="p-4 bg-gradient-to-br from-slate-100 to-slate-200 rounded-2xl w-16 h-16 mx-auto flex items-center justify-center">
+              <Target className="w-8 h-8 text-slate-400" />
+            </div>
+            <div>
+              <p className="text-slate-600 font-medium text-lg">Nenhuma meta ativa</p>
+              <p className="text-slate-500 text-sm mt-2">Adicione gastos nos cartões para ver suas metas diárias</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Resumo da Meta Diária */}
+      <Card className={`${
+        progress.isCompleted 
+          ? 'bg-gradient-to-br from-green-500 to-emerald-600' 
+          : urgentGoals.length > 0
+          ? 'bg-gradient-to-br from-orange-500 to-red-600'
+          : 'bg-gradient-to-br from-blue-500 to-indigo-600'
+      } text-white border-0 shadow-xl hover:shadow-2xl transition-all duration-300`}>
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center justify-between text-xl font-semibold">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
+                {progress.isCompleted ? (
+                  <CheckCircle className="w-6 h-6" />
+                ) : urgentGoals.length > 0 ? (
+                  <AlertTriangle className="w-6 h-6" />
+                ) : (
+                  <Target className="w-6 h-6" />
+                )}
+              </div>
+              Meta Diária
+            </div>
+            {urgentGoals.length > 0 && (
+              <Badge variant="destructive" className="bg-red-700 text-white">
+                {urgentGoals.length} Urgente{urgentGoals.length > 1 ? 's' : ''}
+              </Badge>
+            )}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-3xl font-bold">
+                  R$ {totalDailyGoal.toFixed(2)}
+                </div>
+                <div className="text-white/80 text-sm">
+                  {progress.isCompleted ? 'Meta atingida!' : 'Meta de hoje'}
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-xl font-bold">
+                  R$ {progress.todayIncome.toFixed(2)}
+                </div>
+                <div className="text-white/80 text-sm">
+                  Ganho hoje ({progress.progressPercent.toFixed(0)}%)
+                </div>
+              </div>
+            </div>
+            
+            <Progress 
+              value={progress.progressPercent} 
+              className="h-3 bg-white/20"
+            />
+            
+            {!progress.isCompleted && (
+              <div className="flex items-center gap-2 text-sm text-white/90">
+                <DollarSign className="w-4 h-4" />
+                <span>Faltam R$ {progress.remaining.toFixed(2)} para atingir a meta</span>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Detalhes por Cartão */}
+      <Card className="bg-white/80 backdrop-blur-sm shadow-xl border-0">
+        <CardHeader className="pb-4">
+          <CardTitle className="flex items-center gap-3 text-xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+            <div className="p-2 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl shadow-lg">
+              <Calendar className="w-5 h-5 text-white" />
+            </div>
+            Detalhes por Cartão
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {goals.map(goal => (
+              <div 
+                key={goal.cardId} 
+                className={`p-4 rounded-xl border-2 transition-all duration-200 ${
+                  goal.daysUntilDue <= 3 
+                    ? 'border-red-200 bg-red-50' 
+                    : goal.daysUntilDue <= 7
+                    ? 'border-orange-200 bg-orange-50'
+                    : 'border-slate-200 bg-slate-50'
+                }`}
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <div>
+                    <h3 className="font-bold text-slate-800">
+                      {goal.cardName} - {goal.banco}
+                    </h3>
+                    <div className="flex items-center gap-2 mt-1">
+                      <Clock className="w-4 h-4 text-slate-500" />
+                      <span className="text-sm text-slate-600">
+                        {goal.daysUntilDue === 0 ? 'Vence hoje!' : 
+                         goal.daysUntilDue === 1 ? 'Vence amanhã' :
+                         `Vence em ${goal.daysUntilDue} dias`}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-lg font-bold text-slate-800">
+                      R$ {goal.dailyGoal.toFixed(2)}/dia
+                    </div>
+                    <div className="text-sm text-slate-600">
+                      Total: R$ {goal.totalAmount.toFixed(2)}
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex items-center justify-between text-xs text-slate-500">
+                  <span>Vencimento: {goal.dueDate.toLocaleDateString('pt-BR')}</span>
+                  {goal.daysUntilDue <= 3 && (
+                    <Badge variant="destructive" className="text-xs">
+                      Urgente
+                    </Badge>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+});

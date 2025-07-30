@@ -8,7 +8,7 @@ interface CardFormProps {
     nome: string;
     banco: string;
     limite: string;
-    fechamento: string;
+    diaVencimento: string;
   };
   showCardForm: boolean;
   setShowCardForm: (show: boolean) => void;
@@ -38,6 +38,9 @@ export const CardForm = ({
       ) : (
         <>
           <h2 className="text-xl font-bold mb-4">Cadastrar Novo Cartão</h2>
+          <p className="text-sm text-gray-600 mb-4">
+            📅 Cadastre seus cartões com o dia que a fatura vence todo mês
+          </p>
           <form onSubmit={handleAddCard} className="space-y-4">
             <input
               type="text"
@@ -59,19 +62,25 @@ export const CardForm = ({
             <input
               type="number"
               name="limite"
-              placeholder="Limite"
+              placeholder="Limite (opcional)"
               value={cardForm.limite}
               onChange={handleCardInput}
               className="w-full border rounded px-3 py-2"
             />
             <input
-              type="date"
-              name="fechamento"
-              placeholder="Data de fechamento"
-              value={cardForm.fechamento}
+              type="number"
+              name="diaVencimento"
+              placeholder="Dia do vencimento (1-31)"
+              value={cardForm.diaVencimento}
               onChange={handleCardInput}
-              className="w-full border rounded px-3 py-2"
+              min="1"
+              max="31"
+              className="w-full border rounded px-3 py-2 border-indigo-300 focus:border-indigo-500"
+              required
             />
+            <div className="text-xs text-gray-600 mt-1">
+              💡 Exemplo: Se a fatura vence todo dia 15, digite "15"
+            </div>
             <div className="flex gap-2">
               <button
                 type="submit"
@@ -100,7 +109,7 @@ export const CardForm = ({
                       <div className="font-medium">{card.nome} - {card.banco}</div>
                       <div className="text-sm text-gray-600">
                         {card.limite && `Limite: R$ ${card.limite}`}
-                        {card.fechamento && ` • Fechamento: ${card.fechamento}`}
+                        <span className="font-semibold text-indigo-600"> • Vence todo dia ${card.diaVencimento}</span>
                       </div>
                     </div>
                     <Button 

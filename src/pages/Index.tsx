@@ -12,6 +12,7 @@ import { CardExpenseSummary } from "@/components/CardExpenseSummary";
 import { NextBillsReport } from "@/components/NextBillsReport";
 import { CardForm } from "@/components/CardForm";
 import { DataManager } from "@/components/DataManager";
+import { DailyGoals } from "@/components/DailyGoals";
 import { Transaction } from "@/types/Transaction";
 
 const Index = () => {
@@ -68,6 +69,9 @@ const Index = () => {
             onAddIncome={handleAddIncome}
             onAddExpense={handleAddExpense}
           />
+
+          {/* Metas Diárias */}
+          <DailyGoals cards={cards} transactions={transactions} />
 
           {/* Dica de uso */}
           <div className="text-center animate-fade-in">

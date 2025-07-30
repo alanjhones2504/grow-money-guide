@@ -5,7 +5,7 @@ import { CardStorage } from "@/utils/storage";
 
 export const useCards = () => {
   const [cards, setCards] = useState<Card[]>([]);
-  const [cardForm, setCardForm] = useState({ nome: "", banco: "", limite: "", fechamento: "" });
+  const [cardForm, setCardForm] = useState({ nome: "", banco: "", limite: "", diaVencimento: "" });
   const [showCardForm, setShowCardForm] = useState(false);
   const { toast } = useToast();
 
@@ -55,10 +55,10 @@ export const useCards = () => {
     
     setCards(prev => [
       ...prev,
-      { id: Date.now(), ...cardForm }
+      { id: Date.now(), ...cardForm, diaVencimento: parseInt(cardForm.diaVencimento) || 1 }
     ]);
     
-    setCardForm({ nome: "", banco: "", limite: "", fechamento: "" });
+    setCardForm({ nome: "", banco: "", limite: "", diaVencimento: "" });
     setShowCardForm(false);
     
     toast({

@@ -24,7 +24,7 @@ export const NextBillsReport = memo(({ cards, transactions }: NextBillsReportPro
         return (
           <div key={card.id} className="mb-6">
             <div className="font-semibold text-purple-700 mb-2">
-              {card.nome} ({card.banco}) — Próxima fatura: <span className="font-bold">R$ {totalFatura.toFixed(2)}</span>
+              {card.nome} ({card.banco}) — Vence dia {card.diaVencimento}: <span className="font-bold">R$ {totalFatura.toFixed(2)}</span>
             </div>
             {comprasParceladas.length === 0 ? (
               <div className="text-gray-500 text-sm">Nenhuma compra parcelada.</div>
