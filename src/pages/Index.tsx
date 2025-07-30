@@ -13,6 +13,7 @@ import { NextBillsReport } from "@/components/NextBillsReport";
 import { CardForm } from "@/components/CardForm";
 import { DataManager } from "@/components/DataManager";
 import { DailyGoals } from "@/components/DailyGoals";
+import { FuturePayments } from "@/components/FuturePayments";
 import { Transaction } from "@/types/Transaction";
 
 const Index = () => {
@@ -105,6 +106,9 @@ const Index = () => {
 
           {/* Relatório de próximas faturas por cartão */}
           <NextBillsReport cards={cards} transactions={transactions} />
+
+          {/* Pagamentos Futuros */}
+          <FuturePayments transactions={transactions} cards={cards} />
 
           {/* Cadastro de Cartão */}
           <CardForm 
