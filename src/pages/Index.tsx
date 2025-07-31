@@ -4,29 +4,26 @@ import { AddTransactionForm } from "@/components/AddTransactionForm";
 import { usePWALifecycle } from "@/hooks/usePWALifecycle";
 import { useTransactions } from "@/hooks/useTransactions";
 import { useCards } from "@/hooks/useCards";
-import { SummaryCards } from "@/components/SummaryCards";
 import { PWAIndicators } from "@/components/PWAIndicators";
-import { AppHeader } from "@/components/AppHeader";
-import { MainContent } from "@/components/MainContent";
-import { CardExpenseSummary } from "@/components/CardExpenseSummary";
-import { NextBillsReport } from "@/components/NextBillsReport";
-import { CardForm } from "@/components/CardForm";
-import { DataManager } from "@/components/DataManager";
-import { DailyGoals } from "@/components/DailyGoals";
-import { FuturePayments } from "@/components/FuturePayments";
+import { Navigation } from "@/components/Navigation";
+import { Dashboard } from "@/pages/Dashboard";
+import { Transactions } from "@/pages/Transactions";
+import { Analysis } from "@/pages/Analysis";
+import { Settings } from "@/pages/Settings";
 import { Transaction } from "@/types/Transaction";
 
 const Index = () => {
+  const [activeTab, setActiveTab] = useState('dashboard');
   const [showAddForm, setShowAddForm] = useState(false);
   const [transactionType, setTransactionType] = useState<'income' | 'expense'>('expense');
   const pwaLifecycle = usePWALifecycle();
   const { transactions, addTransaction, deleteTransaction, calculateTotals, updateTransaction } = useTransactions();
-  const { 
-    cards, 
-    cardForm, 
-    showCardForm, 
-    setShowCardForm, 
-    handleCardInput, 
+  const {
+    cards,
+    cardForm,
+    showCardForm,
+    setShowCardForm,
+    handleCardInput,
     handleAddCard,
     deleteCard,
     markCardAsPaid,
@@ -56,67 +53,47 @@ const Index = () => {
     setShowAddForm(true);
   };
 
-  return (
-    <ScrollArea className="h-screen">
-      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-cyan-50 p-4 sm:p-6 lg:p-8">
-        <div className="max-w-7xl mx-auto space-y-8">
-          {/* PWA Status Indicators */}
-          <PWAIndicators pwaLifecycle={pwaLifecycle} />
+  const handleViewTransactions = () => {
+    setActiveTab('transactions');
+  };
 
-          {/* Header */}
-          <AppHeader />
-
-          {/* Summary Cards */}
-          <SummaryCards 
-            totals={totals} 
+  const renderActiveTab = () => {
+    switch (activeTab) {
+      case 'dashboard':
+        return (
+          <Dashboard
+            transactions={transactions}
+            cards={cards}
+            totals={totals}
             onAddIncome={handleAddIncome}
             onAddExpense={handleAddExpense}
+            markCardAsPaid={markCardAsPaid}
+            markCardAsUnpaid={markCardAsUnpaid}
+            onViewTransactions={handleViewTransactions}
           />
-
-          {/* Metas Diárias */}
-          <DailyGoals 
-            cards={cards} 
-            transactions={transactions} 
-            onMarkAsPaid={markCardAsPaid}
-            onMarkAsUnpaid={markCardAsUnpaid}
+        );
+      case 'transactions':
+        return (
+          <Transactions
+            transactions={transactions}
+            cards={cards}
+            onDelete={deleteTransaction}
+            updateTransaction={updateTransaction}
+            onAdd={handleAddTransaction}
           />
-
-          {/* Dica de uso */}
-          <div className="text-center animate-fade-in">
-            <p className="text-slate-600 text-lg font-medium">
-              💡 Clique nos cards acima para adicionar receitas ou despesas rapidamente
-            </p>
-          </div>
-
-          {/* Main Content */}
-          <MainContent transactions={transactions} onDelete={deleteTransaction} updateTransaction={updateTransaction} />
-
-          {/* Add Transaction Modal */}
-          {showAddForm && (
-            <AddTransactionForm
-              onAdd={handleAddTransaction}
-              onClose={() => setShowAddForm(false)}
-              cards={cards}
-              initialType={transactionType}
-            />
-          )}
-
-          {/* Resumo de despesas por cartão e à vista */}
-          <CardExpenseSummary 
-            cards={cards} 
-            transactions={transactions} 
+        );
+      case 'analysis':
+        return (
+          <Analysis
+            transactions={transactions}
+            cards={cards}
             markCardAsPaid={markCardAsPaid}
             markCardAsUnpaid={markCardAsUnpaid}
           />
-
-          {/* Relatório de próximas faturas por cartão */}
-          <NextBillsReport cards={cards} transactions={transactions} />
-
-          {/* Pagamentos Futuros */}
-          <FuturePayments transactions={transactions} cards={cards} />
-
-          {/* Cadastro de Cartão */}
-          <CardForm 
+        );
+      case 'settings':
+        return (
+          <Settings
             cards={cards}
             cardForm={cardForm}
             showCardForm={showCardForm}
@@ -124,13 +101,41 @@ const Index = () => {
             handleCardInput={handleCardInput}
             handleAddCard={handleAddCard}
             deleteCard={deleteCard}
+            onDataChange={handleDataChange}
           />
+        );
+      default:
+        return null;
+    }
+  };
 
-          {/* Gerenciador de Dados Locais */}
-          <DataManager onDataChange={handleDataChange} />
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-cyan-50">
+      {/* Navigation */}
+      <Navigation activeTab={activeTab} onTabChange={setActiveTab} />
+
+      <ScrollArea className="h-screen">
+        <div className="p-4 sm:p-6 lg:p-8">
+          <div className="max-w-md md:max-w-4xl lg:max-w-5xl mx-auto">
+            {/* PWA Status Indicators */}
+            <PWAIndicators pwaLifecycle={pwaLifecycle} />
+
+            {/* Conteúdo da aba ativa */}
+            {renderActiveTab()}
+
+            {/* Add Transaction Modal */}
+            {showAddForm && (
+              <AddTransactionForm
+                onAdd={handleAddTransaction}
+                onClose={() => setShowAddForm(false)}
+                cards={cards}
+                initialType={transactionType}
+              />
+            )}
+          </div>
         </div>
-      </div>
-    </ScrollArea>
+      </ScrollArea>
+    </div>
   );
 };
 
