@@ -9,6 +9,7 @@ interface CardFormProps {
     banco: string;
     limite: string;
     diaVencimento: string;
+    diaFechamento: string;
   };
   showCardForm: boolean;
   setShowCardForm: (show: boolean) => void;
@@ -39,7 +40,7 @@ export const CardForm = ({
         <>
           <h2 className="text-xl font-bold mb-4">Cadastrar Novo Cartão</h2>
           <p className="text-sm text-gray-600 mb-4">
-            📅 Cadastre seus cartões com o dia que a fatura vence todo mês
+            📅 Cadastre seus cartões com os dias de fechamento e vencimento da fatura
           </p>
           <form onSubmit={handleAddCard} className="space-y-4">
             <input
@@ -67,19 +68,42 @@ export const CardForm = ({
               onChange={handleCardInput}
               className="w-full border rounded px-3 py-2"
             />
-            <input
-              type="number"
-              name="diaVencimento"
-              placeholder="Dia do vencimento (1-31)"
-              value={cardForm.diaVencimento}
-              onChange={handleCardInput}
-              min="1"
-              max="31"
-              className="w-full border rounded px-3 py-2 border-indigo-300 focus:border-indigo-500"
-              required
-            />
-            <div className="text-xs text-gray-600 mt-1">
-              💡 Exemplo: Se a fatura vence todo dia 15, digite "15"
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <input
+                  type="number"
+                  name="diaFechamento"
+                  placeholder="Dia do fechamento (1-31)"
+                  value={cardForm.diaFechamento}
+                  onChange={handleCardInput}
+                  min="1"
+                  max="31"
+                  className="w-full border rounded px-3 py-2 border-indigo-300 focus:border-indigo-500"
+                  required
+                />
+                <div className="text-xs text-gray-600 mt-1">
+                  📊 Quando fecha a fatura
+                </div>
+              </div>
+              <div>
+                <input
+                  type="number"
+                  name="diaVencimento"
+                  placeholder="Dia do vencimento (1-31)"
+                  value={cardForm.diaVencimento}
+                  onChange={handleCardInput}
+                  min="1"
+                  max="31"
+                  className="w-full border rounded px-3 py-2 border-indigo-300 focus:border-indigo-500"
+                  required
+                />
+                <div className="text-xs text-gray-600 mt-1">
+                  💳 Quando vence o pagamento
+                </div>
+              </div>
+            </div>
+            <div className="text-xs text-gray-600 bg-blue-50 p-2 rounded">
+              💡 Exemplo: Fatura fecha dia 5 e vence dia 15 de cada mês
             </div>
             <div className="flex gap-2">
               <button
@@ -109,7 +133,10 @@ export const CardForm = ({
                       <div className="font-medium">{card.nome} - {card.banco}</div>
                       <div className="text-sm text-gray-600">
                         {card.limite && `Limite: R$ ${card.limite}`}
-                        <span className="font-semibold text-indigo-600"> • Vence todo dia ${card.diaVencimento}</span>
+                        <div className="flex gap-4 mt-1">
+                          <span className="font-semibold text-blue-600">📊 Fecha dia {card.diaFechamento}</span>
+                          <span className="font-semibold text-indigo-600">💳 Vence dia {card.diaVencimento}</span>
+                        </div>
                       </div>
                     </div>
                     <Button 

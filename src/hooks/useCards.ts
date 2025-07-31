@@ -5,7 +5,7 @@ import { CardStorage } from "@/utils/storage";
 
 export const useCards = () => {
   const [cards, setCards] = useState<Card[]>([]);
-  const [cardForm, setCardForm] = useState({ nome: "", banco: "", limite: "", diaVencimento: "" });
+  const [cardForm, setCardForm] = useState({ nome: "", banco: "", limite: "", diaVencimento: "", diaFechamento: "" });
   const [showCardForm, setShowCardForm] = useState(false);
   const { toast } = useToast();
 
@@ -13,7 +13,12 @@ export const useCards = () => {
   useEffect(() => {
     try {
       const savedCards = CardStorage.load();
-      setCards(savedCards);
+      // Migração automática: adicionar diaFechamento para cartões antigos
+      const migratedCards = savedCards.map(card => ({
+        ...card,
+        diaFechamento: card.diaFechamento || (card.diaVencimento - 10 > 0 ? card.diaVencimento - 10 : card.diaVencimento + 20)
+      }));
+      setCards(migratedCards);
     } catch (error) {
       console.error('Erro ao carregar cartões:', error);
       toast({
@@ -53,12 +58,26 @@ export const useCards = () => {
       return;
     }
     
+    if (!cardForm.diaFechamento || !cardForm.diaVencimento) {
+      toast({
+        title: "Datas obrigatórias",
+        description: "Por favor, informe os dias de fechamento e vencimento.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     setCards(prev => [
       ...prev,
-      { id: Date.now(), ...cardForm, diaVencimento: parseInt(cardForm.diaVencimento) || 1 }
+      { 
+        id: Date.now(), 
+        ...cardForm, 
+        diaVencimento: parseInt(cardForm.diaVencimento) || 1,
+        diaFechamento: parseInt(cardForm.diaFechamento) || 1
+      }
     ]);
     
-    setCardForm({ nome: "", banco: "", limite: "", diaVencimento: "" });
+    setCardForm({ nome: "", banco: "", limite: "", diaVencimento: "", diaFechamento: "" });
     setShowCardForm(false);
     
     toast({

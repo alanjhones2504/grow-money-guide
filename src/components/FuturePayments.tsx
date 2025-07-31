@@ -6,12 +6,14 @@ import {
   CreditCard,
   AlertCircle,
   BarChart3,
-  Clock
+  Clock,
+  ChevronDown,
+  ChevronUp
 } from "lucide-react";
 import { useFuturePayments } from "@/hooks/useFuturePayments";
 import { Transaction } from "@/types/Transaction";
 import { Card as CardType } from "@/types/Card";
-import { memo } from "react";
+import { memo, useState } from "react";
 
 interface FuturePaymentsProps {
   transactions: Transaction[];
@@ -26,6 +28,18 @@ export const FuturePayments = memo(({ transactions, cards }: FuturePaymentsProps
     highestMonth,
     totalInstallmentTransactions 
   } = useFuturePayments(transactions, cards);
+  
+  const [expandedMonths, setExpandedMonths] = useState<Set<string>>(new Set());
+  
+  const toggleMonth = (monthKey: string) => {
+    const newExpanded = new Set(expandedMonths);
+    if (newExpanded.has(monthKey)) {
+      newExpanded.delete(monthKey);
+    } else {
+      newExpanded.add(monthKey);
+    }
+    setExpandedMonths(newExpanded);
+  };
 
   if (futureMonths.length === 0) {
     return (
@@ -105,95 +119,119 @@ export const FuturePayments = memo(({ transactions, cards }: FuturePaymentsProps
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-6">
-            {futureMonths.map((month, index) => (
-              <div 
-                key={`${month.year}-${month.monthNumber}`}
-                className={`p-4 rounded-xl border-2 transition-all duration-200 ${
-                  index === 0 
-                    ? 'border-indigo-200 bg-indigo-50' 
-                    : month.totalAmount > averageMonthlyAmount
-                    ? 'border-orange-200 bg-orange-50'
-                    : 'border-slate-200 bg-slate-50'
-                }`}
-              >
-                {/* Cabeçalho do Mês */}
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    <div className={`p-2 rounded-lg ${
-                      index === 0 
-                        ? 'bg-indigo-500 text-white' 
-                        : month.totalAmount > averageMonthlyAmount
-                        ? 'bg-orange-500 text-white'
-                        : 'bg-slate-500 text-white'
-                    }`}>
-                      <Clock className="w-4 h-4" />
+          <div className="space-y-4">
+            {futureMonths.map((month, index) => {
+              const monthKey = `${month.year}-${month.monthNumber}`;
+              const isExpanded = expandedMonths.has(monthKey);
+              
+              return (
+                <div 
+                  key={monthKey}
+                  className={`rounded-xl border-2 transition-all duration-200 ${
+                    index === 0 
+                      ? 'border-indigo-200 bg-indigo-50' 
+                      : month.totalAmount > averageMonthlyAmount
+                      ? 'border-orange-200 bg-orange-50'
+                      : 'border-slate-200 bg-slate-50'
+                  }`}
+                >
+                  {/* Cabeçalho Clicável do Mês */}
+                  <button
+                    onClick={() => toggleMonth(monthKey)}
+                    className="w-full p-4 flex items-center justify-between hover:bg-white/50 transition-colors duration-200 rounded-xl"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`p-2 rounded-lg ${
+                        index === 0 
+                          ? 'bg-indigo-500 text-white' 
+                          : month.totalAmount > averageMonthlyAmount
+                          ? 'bg-orange-500 text-white'
+                          : 'bg-slate-500 text-white'
+                      }`}>
+                        <Clock className="w-4 h-4" />
+                      </div>
+                      <div className="text-left">
+                        <h3 className="font-bold text-slate-800 capitalize">
+                          Fatura de {month.month}
+                        </h3>
+                        <p className="text-sm text-slate-600">
+                          {month.payments.length} pagamento{month.payments.length > 1 ? 's' : ''}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="font-bold text-slate-800 capitalize">
-                        {month.month}
-                      </h3>
-                      <p className="text-sm text-slate-600">
-                        {month.payments.length} pagamento{month.payments.length > 1 ? 's' : ''}
-                      </p>
-                    </div>
-                  </div>
-                  
-                  <div className="text-right">
-                    <div className="text-xl font-bold text-slate-800">
-                      R$ {month.totalAmount.toFixed(2)}
-                    </div>
-                    {index === 0 && (
-                      <Badge variant="default" className="bg-indigo-500 text-white text-xs">
-                        Próximo Mês
-                      </Badge>
-                    )}
-                    {month.totalAmount > averageMonthlyAmount && index > 0 && (
-                      <Badge variant="destructive" className="text-xs">
-                        Acima da Média
-                      </Badge>
-                    )}
-                  </div>
-                </div>
-
-                {/* Lista de Pagamentos do Mês */}
-                <div className="space-y-3">
-                  {month.payments.map((payment) => (
-                    <div 
-                      key={`${payment.transactionId}-${payment.currentInstallment}`}
-                      className="flex items-center justify-between p-3 bg-white rounded-lg shadow-sm"
-                    >
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <h4 className="font-semibold text-slate-800">
-                            {payment.description}
-                          </h4>
-                          <Badge variant="outline" className="text-xs">
-                            {payment.currentInstallment}/{payment.totalInstallments}
-                          </Badge>
+                    
+                    <div className="flex items-center gap-3">
+                      <div className="text-right">
+                        <div className="text-xl font-bold text-slate-800">
+                          R$ {month.totalAmount.toFixed(2)}
                         </div>
-                        
-                        {payment.cardName && (
-                          <div className="flex items-center gap-2 text-sm text-slate-600">
-                            <CreditCard className="w-3 h-3" />
-                            <span>{payment.cardName} - {payment.cardBank}</span>
-                          </div>
-                        )}
+                        <div className="flex gap-2 justify-end">
+                          {index === 0 && (
+                            <Badge variant="default" className="bg-indigo-500 text-white text-xs">
+                              Próximo Mês
+                            </Badge>
+                          )}
+                          {month.totalAmount > averageMonthlyAmount && index > 0 && (
+                            <Badge variant="destructive" className="text-xs">
+                              Acima da Média
+                            </Badge>
+                          )}
+                        </div>
                       </div>
                       
-                      <div className="text-right">
-                        <div className="font-bold text-slate-800">
-                          R$ {payment.monthlyAmount.toFixed(2)}
-                        </div>
-                        <div className="text-xs text-slate-500">
-                          parcela {payment.currentInstallment}
-                        </div>
+                      <div className="ml-2">
+                        {isExpanded ? (
+                          <ChevronUp className="w-5 h-5 text-slate-600" />
+                        ) : (
+                          <ChevronDown className="w-5 h-5 text-slate-600" />
+                        )}
                       </div>
                     </div>
-                  ))}
+                  </button>
+
+                  {/* Lista de Pagamentos do Mês (Expansível) */}
+                  {isExpanded && (
+                    <div className="px-4 pb-4 space-y-3 border-t border-white/50">
+                      <div className="pt-3">
+                        {month.payments.map((payment) => (
+                          <div 
+                            key={`${payment.transactionId}-${payment.currentInstallment}`}
+                            className="flex items-center justify-between p-3 bg-white rounded-lg shadow-sm mb-3 last:mb-0"
+                          >
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1">
+                                <h4 className="font-semibold text-slate-800">
+                                  {payment.description}
+                                </h4>
+                                <Badge variant="outline" className="text-xs">
+                                  {payment.currentInstallment}/{payment.totalInstallments}
+                                </Badge>
+                              </div>
+                              
+                              {payment.cardName && (
+                                <div className="flex items-center gap-2 text-sm text-slate-600">
+                                  <CreditCard className="w-3 h-3" />
+                                  <span>{payment.cardName} - {payment.cardBank}</span>
+                                </div>
+                              )}
+                            </div>
+                            
+                            <div className="text-right">
+                              <div className="font-bold text-slate-800">
+                                R$ {payment.monthlyAmount.toFixed(2)}
+                              </div>
+                              <div className="text-xs text-slate-500">
+                                parcela {payment.currentInstallment}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </CardContent>
       </Card>
