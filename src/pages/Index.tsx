@@ -102,7 +102,12 @@ const Index = () => {
           )}
 
           {/* Resumo de despesas por cartão e à vista */}
-          <CardExpenseSummary cards={cards} transactions={transactions} />
+          <CardExpenseSummary 
+            cards={cards} 
+            transactions={transactions} 
+            markCardAsPaid={markCardAsPaid}
+            markCardAsUnpaid={markCardAsUnpaid}
+          />
 
           {/* Relatório de próximas faturas por cartão */}
           <NextBillsReport cards={cards} transactions={transactions} />
