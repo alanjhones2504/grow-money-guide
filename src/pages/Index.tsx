@@ -27,7 +27,11 @@ const Index = () => {
     handleAddCard,
     deleteCard,
     markCardAsPaid,
-    markCardAsUnpaid
+    markCardAsUnpaid,
+    editingCardId,
+    startEditCard,
+    updateCard,
+    cancelEdit
   } = useCards();
 
   const totals = calculateTotals();
@@ -101,6 +105,10 @@ const Index = () => {
             handleCardInput={handleCardInput}
             handleAddCard={handleAddCard}
             deleteCard={deleteCard}
+            editingCardId={editingCardId}
+            startEditCard={startEditCard}
+            updateCard={updateCard}
+            cancelEdit={cancelEdit}
             onDataChange={handleDataChange}
           />
         );

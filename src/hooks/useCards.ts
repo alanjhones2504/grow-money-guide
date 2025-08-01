@@ -7,6 +7,7 @@ export const useCards = () => {
   const [cards, setCards] = useState<Card[]>([]);
   const [cardForm, setCardForm] = useState({ nome: "", banco: "", limite: "", diaVencimento: "", diaFechamento: "" });
   const [showCardForm, setShowCardForm] = useState(false);
+  const [editingCardId, setEditingCardId] = useState<number | null>(null);
   const { toast } = useToast();
 
   // Carregar cartões do localStorage ao iniciar
@@ -118,6 +119,67 @@ export const useCards = () => {
     });
   }, [toast]);
 
+  const startEditCard = useCallback((card: Card) => {
+    setCardForm({
+      nome: card.nome,
+      banco: card.banco,
+      limite: card.limite,
+      diaVencimento: card.diaVencimento.toString(),
+      diaFechamento: card.diaFechamento.toString()
+    });
+    setEditingCardId(card.id);
+    setShowCardForm(true);
+  }, []);
+
+  const updateCard = useCallback((e: React.FormEvent) => {
+    e.preventDefault();
+    if (!cardForm.nome) {
+      toast({
+        title: "Nome obrigatório",
+        description: "Por favor, informe o nome do cartão.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    if (!cardForm.diaFechamento || !cardForm.diaVencimento) {
+      toast({
+        title: "Datas obrigatórias",
+        description: "Por favor, informe os dias de fechamento e vencimento.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setCards(prev => prev.map(card => 
+      card.id === editingCardId 
+        ? {
+            ...card,
+            nome: cardForm.nome,
+            banco: cardForm.banco,
+            limite: cardForm.limite,
+            diaVencimento: parseInt(cardForm.diaVencimento) || 1,
+            diaFechamento: parseInt(cardForm.diaFechamento) || 1
+          }
+        : card
+    ));
+
+    setCardForm({ nome: "", banco: "", limite: "", diaVencimento: "", diaFechamento: "" });
+    setEditingCardId(null);
+    setShowCardForm(false);
+    
+    toast({
+      title: "Cartão atualizado! ✅",
+      description: "As informações do cartão foram atualizadas com sucesso."
+    });
+  }, [cardForm, editingCardId, toast]);
+
+  const cancelEdit = useCallback(() => {
+    setCardForm({ nome: "", banco: "", limite: "", diaVencimento: "", diaFechamento: "" });
+    setEditingCardId(null);
+    setShowCardForm(false);
+  }, []);
+
   return {
     cards,
     cardForm,
@@ -127,6 +189,10 @@ export const useCards = () => {
     handleAddCard,
     deleteCard,
     markCardAsPaid,
-    markCardAsUnpaid
+    markCardAsUnpaid,
+    editingCardId,
+    startEditCard,
+    updateCard,
+    cancelEdit
   };
 };

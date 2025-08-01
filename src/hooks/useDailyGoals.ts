@@ -7,6 +7,8 @@ interface DailyGoal {
   cardName: string;
   banco: string;
   totalAmount: number;
+  futureIncome: number;
+  netAmount: number;
   daysUntilDue: number;
   dailyGoal: number;
   dueDate: Date;
@@ -57,22 +59,44 @@ export const useDailyGoals = (cards: Card[], transactions: Transaction[]) => {
       const timeDiff = dueDate.getTime() - today.getTime();
       const daysUntilDue = Math.ceil(timeDiff / (1000 * 3600 * 24));
       
-      // Calcular meta diária
-      const dailyGoal = daysUntilDue > 0 ? totalSpent / daysUntilDue : totalSpent;
+      // Calcular receitas futuras até o vencimento do cartão
+      const futureIncome = transactions
+        .filter(t => {
+          if (t.type !== 'income') return false;
+          
+          // Receitas agendadas
+          if (t.receivedStatus === 'scheduled' && t.scheduledDate) {
+            const scheduledDate = new Date(t.scheduledDate);
+            return scheduledDate >= today && scheduledDate <= dueDate;
+          }
+          
+          // Receitas normais com data futura
+          const transactionDate = new Date(t.date);
+          return transactionDate >= today && transactionDate <= dueDate;
+        })
+        .reduce((sum, t) => sum + t.amount, 0);
+
+      // Calcular valor líquido (gastos - receitas futuras)
+      const netAmount = Math.max(0, totalSpent - futureIncome);
+      
+      // Calcular meta diária baseada no valor líquido
+      const dailyGoal = netAmount > 0 && daysUntilDue > 0 ? netAmount / daysUntilDue : 0;
 
       return {
         cardId: card.id,
         cardName: card.nome,
         banco: card.banco,
         totalAmount: totalSpent,
+        futureIncome,
+        netAmount,
         daysUntilDue: Math.max(0, daysUntilDue),
         dailyGoal: Math.max(0, dailyGoal),
         dueDate,
         isOverdue: daysUntilDue < 0
       };
-    }).filter(goal => goal.totalAmount > 0); // Só mostrar cartões com gastos
+    }); // Mostrar todos os cartões não pagos
 
-    // Calcular meta diária total
+    // Calcular meta diária total baseada no valor líquido
     const totalDailyGoal = goals.reduce((sum, goal) => sum + goal.dailyGoal, 0);
 
     // Encontrar próxima data de vencimento

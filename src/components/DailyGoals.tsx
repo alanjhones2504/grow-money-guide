@@ -28,7 +28,10 @@ export const DailyGoals = memo(({ cards, transactions, onMarkAsPaid, onMarkAsUnp
   const { goals, totalDailyGoal, nextDueDate, urgentGoals } = useDailyGoals(cards, transactions);
   const progress = useDailyProgress(transactions, totalDailyGoal);
 
-  if (goals.length === 0) {
+  // Verificar se há cartões não pagos
+  const unpaidCards = cards.filter(card => !card.isPaid);
+  
+  if (unpaidCards.length === 0) {
     return (
       <Card className="bg-white/80 backdrop-blur-sm shadow-xl border-0">
         <CardHeader className="pb-4">
@@ -117,6 +120,16 @@ export const DailyGoals = memo(({ cards, transactions, onMarkAsPaid, onMarkAsUnp
                 <span>Faltam R$ {progress.remaining.toFixed(2)} para atingir a meta</span>
               </div>
             )}
+            
+            {/* Mostrar total de receitas futuras */}
+            {goals.some(goal => goal.futureIncome > 0) && (
+              <div className="flex items-center gap-2 text-sm text-white/90 bg-white/10 rounded-lg p-2">
+                <TrendingUp className="w-4 h-4" />
+                <span>
+                  Receitas futuras: R$ {goals.reduce((sum, goal) => sum + goal.futureIncome, 0).toFixed(2)}
+                </span>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -156,17 +169,44 @@ export const DailyGoals = memo(({ cards, transactions, onMarkAsPaid, onMarkAsUnp
                          goal.daysUntilDue === 1 ? 'Vence amanhã' :
                          `Vence em ${goal.daysUntilDue} dias`}
                       </span>
+                      {goal.futureIncome > 0 && (
+                        <div className="flex items-center gap-1 text-green-600">
+                          <TrendingUp className="w-3 h-3" />
+                          <span className="text-xs font-medium">Receitas futuras</span>
+                        </div>
+                      )}
                     </div>
                   </div>
                   
                   <div className="flex items-center gap-3">
                     <div className="text-right">
-                      <div className="text-lg font-bold text-slate-800">
-                        R$ {goal.dailyGoal.toFixed(2)}/dia
-                      </div>
-                      <div className="text-sm text-slate-600">
-                        Total: R$ {goal.totalAmount.toFixed(2)}
-                      </div>
+                      {goal.totalAmount > 0 ? (
+                        <>
+                          <div className="text-lg font-bold text-slate-800">
+                            R$ {goal.dailyGoal.toFixed(2)}/dia
+                          </div>
+                          <div className="text-sm text-slate-600 space-y-1">
+                            <div>Gastos: R$ {goal.totalAmount.toFixed(2)}</div>
+                            {goal.futureIncome > 0 && (
+                              <div className="text-green-600">
+                                Receitas: -R$ {goal.futureIncome.toFixed(2)}
+                              </div>
+                            )}
+                            <div className="font-semibold">
+                              Líquido: R$ {goal.netAmount.toFixed(2)}
+                            </div>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div className="text-lg font-bold text-slate-500">
+                            Sem gastos
+                          </div>
+                          <div className="text-sm text-slate-500">
+                            Adicione transações
+                          </div>
+                        </>
+                      )}
                     </div>
                     
                     {/* Botão Marcar como Pago */}

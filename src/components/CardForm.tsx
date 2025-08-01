@@ -1,6 +1,6 @@
 import { Card } from "@/types/Card";
 import { Button } from "@/components/ui/button";
-import { Trash2 } from "lucide-react";
+import { Trash2, Edit3 } from "lucide-react";
 
 interface CardFormProps {
   cards: Card[];
@@ -16,6 +16,10 @@ interface CardFormProps {
   handleCardInput: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handleAddCard: (e: React.FormEvent) => void;
   deleteCard: (id: number) => void;
+  editingCardId: number | null;
+  startEditCard: (card: Card) => void;
+  updateCard: (e: React.FormEvent) => void;
+  cancelEdit: () => void;
 }
 
 export const CardForm = ({
@@ -25,7 +29,11 @@ export const CardForm = ({
   setShowCardForm,
   handleCardInput,
   handleAddCard,
-  deleteCard
+  deleteCard,
+  editingCardId,
+  startEditCard,
+  updateCard,
+  cancelEdit
 }: CardFormProps) => {
   return (
     <div className="mt-12 max-w-md mx-auto bg-white rounded shadow p-6">
@@ -38,11 +46,13 @@ export const CardForm = ({
         </button>
       ) : (
         <>
-          <h2 className="text-xl font-bold mb-4">Cadastrar Novo Cartão</h2>
+          <h2 className="text-xl font-bold mb-4">
+            {editingCardId ? 'Editar Cartão' : 'Cadastrar Novo Cartão'}
+          </h2>
           <p className="text-sm text-gray-600 mb-4">
-            📅 Cadastre seus cartões com os dias de fechamento e vencimento da fatura
+            📅 {editingCardId ? 'Edite as informações do seu cartão' : 'Cadastre seus cartões com os dias de fechamento e vencimento da fatura'}
           </p>
-          <form onSubmit={handleAddCard} className="space-y-4">
+          <form onSubmit={editingCardId ? updateCard : handleAddCard} className="space-y-4">
             <input
               type="text"
               name="nome"
@@ -110,18 +120,18 @@ export const CardForm = ({
                 type="submit"
                 className="flex-1 bg-indigo-600 text-white py-2 rounded hover:bg-indigo-700 transition"
               >
-                Salvar Cartão
+                {editingCardId ? 'Atualizar Cartão' : 'Salvar Cartão'}
               </button>
               <button
                 type="button"
                 className="flex-1 bg-gray-300 text-gray-800 py-2 rounded hover:bg-gray-400 transition"
-                onClick={() => setShowCardForm(false)}
+                onClick={editingCardId ? cancelEdit : () => setShowCardForm(false)}
               >
                 Cancelar
               </button>
             </div>
           </form>
-          
+
           {/* Lista de cartões cadastrados */}
           {cards.length > 0 && (
             <div className="mt-6">
@@ -139,14 +149,24 @@ export const CardForm = ({
                         </div>
                       </div>
                     </div>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      onClick={() => deleteCard(card.id)}
-                      className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
+                    <div className="flex gap-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => startEditCard(card)}
+                        className="text-blue-500 hover:text-blue-700 hover:bg-blue-50"
+                      >
+                        <Edit3 className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => deleteCard(card.id)}
+                        className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </li>
                 ))}
               </ul>

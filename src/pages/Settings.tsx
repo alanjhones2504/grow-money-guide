@@ -17,6 +17,10 @@ interface SettingsProps {
   handleCardInput: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handleAddCard: (e: React.FormEvent) => void;
   deleteCard: (id: number) => void;
+  editingCardId: number | null;
+  startEditCard: (card: Card) => void;
+  updateCard: (e: React.FormEvent) => void;
+  cancelEdit: () => void;
   onDataChange: () => void;
 }
 
@@ -28,6 +32,10 @@ export const Settings = memo(({
   handleCardInput,
   handleAddCard,
   deleteCard,
+  editingCardId,
+  startEditCard,
+  updateCard,
+  cancelEdit,
   onDataChange
 }: SettingsProps) => {
   return (
@@ -53,6 +61,10 @@ export const Settings = memo(({
             handleCardInput={handleCardInput}
             handleAddCard={handleAddCard}
             deleteCard={deleteCard}
+            editingCardId={editingCardId}
+            startEditCard={startEditCard}
+            updateCard={updateCard}
+            cancelEdit={cancelEdit}
           />
 
           {/* Gerenciador de Dados Locais */}
