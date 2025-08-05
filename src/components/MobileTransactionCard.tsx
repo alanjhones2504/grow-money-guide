@@ -1,14 +1,15 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Trash2 } from "lucide-react";
+import { Calendar, Trash2, Pencil } from "lucide-react";
 import { Transaction } from "@/types/Transaction";
 
 interface MobileTransactionCardProps {
   transaction: Transaction;
   onDelete: (id: string) => void;
+  onEdit?: () => void;
 }
 
-export const MobileTransactionCard = ({ transaction, onDelete }: MobileTransactionCardProps) => {
+export const MobileTransactionCard = ({ transaction, onDelete, onEdit }: MobileTransactionCardProps) => {
   return (
     <div className="bg-gradient-to-r from-white to-slate-50 rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 border border-slate-100 p-4 space-y-3">
       {/* Header with title and amount */}
@@ -49,6 +50,14 @@ export const MobileTransactionCard = ({ transaction, onDelete }: MobileTransacti
                 : transaction.amount.toFixed(2)
             }
           </span>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onEdit}
+            className="text-indigo-500 hover:text-indigo-700 hover:bg-indigo-50 p-2 rounded-xl transition-all duration-200 hover:scale-110 min-w-[40px]"
+          >
+            <Pencil className="w-4 h-4" />
+          </Button>
           <Button
             variant="ghost"
             size="sm"
